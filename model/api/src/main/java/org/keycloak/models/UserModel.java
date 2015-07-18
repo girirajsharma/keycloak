@@ -1,5 +1,8 @@
 package org.keycloak.models;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -112,6 +115,13 @@ public interface UserModel {
     List<UserConsentModel> getConsents();
     void updateConsent(UserConsentModel consent);
     boolean revokeConsentForClient(String clientInternalId);
+    
+    PublicKey getPublicKey();
+    void setPublicKey(PublicKey publicKey);
+    PrivateKey getPrivateKey();
+    void setPrivateKey(PrivateKey privateKey);
+    X509Certificate getCertificate();
+    void setCertificate(X509Certificate certificate);
 
     public static enum RequiredAction {
         VERIFY_EMAIL, UPDATE_PROFILE, CONFIGURE_TOTP, UPDATE_PASSWORD

@@ -39,7 +39,7 @@ public class ClientsResource {
     protected RealmModel realm;
     private RealmAuth auth;
     private AdminEventBuilder adminEvent;
-    
+
     @Context
     protected KeycloakSession session;
 
@@ -47,7 +47,7 @@ public class ClientsResource {
         this.realm = realm;
         this.auth = auth;
         this.adminEvent = adminEvent;
-        
+
         auth.init(RealmAuth.Resource.CLIENT);
     }
 
@@ -80,7 +80,7 @@ public class ClientsResource {
     }
 
     /**
-     * Create a new client.  Client client_id must be unique!
+     * Create a new client. Client client_id must be unique!
      *
      * @param uriInfo
      * @param rep
@@ -93,9 +93,9 @@ public class ClientsResource {
 
         try {
             ClientModel clientModel = RepresentationToModel.createClient(session, realm, rep, true);
-            
+
             adminEvent.operation(OperationType.CREATE).resourcePath(uriInfo, clientModel.getId()).representation(rep).success();
-            
+
             return Response.created(uriInfo.getAbsolutePathBuilder().path(clientModel.getId()).build()).build();
         } catch (ModelDuplicateException e) {
             return ErrorResponse.exists("Client " + rep.getClientId() + " already exists");

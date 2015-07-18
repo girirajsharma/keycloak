@@ -1000,7 +1000,17 @@ module.controller('RealmTokenDetailCtrl', function($scope, Realm, realm, $http, 
 module.controller('RealmKeysDetailCtrl', function($scope, Realm, realm, $http, $location, Dialog, Notifications) {
     $scope.realm = realm;
 
+    var oldCopy = angular.copy($scope.realm);
+    $scope.changed = false;
+
+    $scope.$watch('realm', function() {
+        if (!angular.equals($scope.realm, oldCopy)) {
+            $scope.changed = true;
+        }
+    }, true);
+    
     $scope.generate = function() {
+    	$scope.changed = false;
         Dialog.confirmGenerateKeys($scope.realm.realm, 'realm', function() {
                 Realm.update({ realm: realm.realm, publicKey : 'GENERATE' }, function () {
                 Notifications.success('New keys generated for realm.');
@@ -1009,6 +1019,31 @@ module.controller('RealmKeysDetailCtrl', function($scope, Realm, realm, $http, $
                 })
             });
         });
+    };
+     
+    $scope.add = function() {
+    	$scope.changed = true;
+    	$scope.realm.publicKey = null;
+    	$scope.realm.certificate = null;
+    };
+    
+    $scope.upload = function() {
+    	var realmCopy = angular.copy($scope.realm);
+    	$scope.changed = false;
+        Realm.update(realmCopy, function () {
+        	$location.url("/realms/" + realm.realm + "/keys-settings");
+            Notifications.success("Your changes have been saved to the realm.");
+            Realm.get({ id : realm.realm }, function(updated) {
+                $scope.realm = updated;
+            })
+        }, function () {
+        	$scope.reset();
+        });
+    };
+
+    $scope.reset = function() {
+        $scope.realm = angular.copy(oldCopy);
+        $scope.changed = false;
     };
 });
 

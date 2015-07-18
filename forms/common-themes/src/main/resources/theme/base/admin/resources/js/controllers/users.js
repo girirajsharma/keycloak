@@ -375,13 +375,12 @@ module.controller('UserDetailCtrl', function($scope, realm, user, BruteForceUser
 
     });
 
-        /*[
-        {id: "VERIFY_EMAIL", text: "Verify Email"},
-        {id: "UPDATE_PROFILE", text: "Update Profile"},
-        {id: "CONFIGURE_TOTP", text: "Configure Totp"},
-        {id: "UPDATE_PASSWORD", text: "Update Password"}
-    ];
-    */
+    /*[
+         {id: "VERIFY_EMAIL", text: "Verify Email"},
+         {id: "UPDATE_PROFILE", text: "Update Profile"},
+         {id: "CONFIGURE_TOTP", text: "Configure Totp"},
+         {id: "UPDATE_PASSWORD", text: "Update Password"}
+     ];*/
 
     $scope.$watch('user', function() {
         if (!angular.equals($scope.user, user)) {
@@ -543,6 +542,78 @@ module.controller('UserCredentialsCtrl', function($scope, realm, user, User, Use
 
         $scope.pwdChange = false;
         $scope.userChange = false;
+    };
+    
+    var oldCopy = angular.copy($scope.user);
+    $scope.changed = false;
+
+    var refresh = function() {
+        User.get({ realm : realm.realm, userId: $scope.user.id }, function(updated) {
+            $scope.user = updated;
+            oldCopy = angular.copy($scope.user);
+        })
+    };
+    
+    $scope.$watch('user', function() {
+        if (!angular.equals($scope.user, oldCopy)) {
+            $scope.changed = true;
+        }
+    }, true);
+    
+    function convertAttributeValuesToString(user) {
+        var attrs = user.attributes;
+        for (var attribute in attrs) {
+            if (typeof attrs[attribute] === "object") {
+                var attrVals = attrs[attribute].join("##");
+                attrs[attribute] = attrVals;
+            }
+        }
+    }
+    
+    $scope.generate = function() {
+    	$scope.changed = false;
+    	
+    	Dialog.confirmGenerateKeys($scope.user.id, 'user', function() {
+    		$scope.user.publicKey = null;
+        	$scope.user.certificate = null;
+	        User.update({
+	            realm: realm.realm,
+	            userId: $scope.user.id
+	        }, $scope.user, function () {
+	            $scope.changed = false;
+	            convertAttributeValuesToString($scope.user);
+	            user = angular.copy($scope.user);
+	            Notifications.success("Your changes have been saved to the user.");
+	            refresh();
+	        });
+    	});
+    };
+    
+    $scope.add = function() {
+    	$scope.changed = true;
+    	$scope.user.publicKey = null;
+    	$scope.user.certificate = null;
+    };
+    
+    $scope.upload = function() {
+    	$scope.changed = false;
+        User.update({
+            realm: realm.realm,
+            userId: $scope.user.id
+        }, $scope.user, function () {
+            $scope.changed = false;
+            convertAttributeValuesToString($scope.user);
+            user = angular.copy($scope.user);
+            Notifications.success("Your changes have been saved to the user.");
+            refresh();
+        }, function() {
+        	$scope.resetKeys();
+        });
+    };
+    
+    $scope.resetKeys = function() {
+        $scope.user = angular.copy(oldCopy);
+        $scope.changed = false;
     };
 });
 

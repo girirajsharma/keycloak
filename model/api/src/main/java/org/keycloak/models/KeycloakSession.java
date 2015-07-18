@@ -60,4 +60,9 @@ public interface KeycloakSession {
      *  Keycloak user storage.  Non-federated, but possibly cache (if it is on) view of users.
      */
     UserProvider userStorage();
+    
+    /**
+     *  Keycloak Certificate Authority keys and certificates storage.
+     */
+    KeycloakCAProvider keycloakCA();
 }

@@ -7,22 +7,25 @@
                 <label class="col-md-2 control-label" for="publicKey">Public key</label>
 
                 <div class="col-md-10">
-                    <textarea type="text" id="publicKey" name="publicKey" class="form-control" rows="4"
-                              kc-select-action="click" readonly>{{realm.publicKey}}</textarea>
+                    <textarea type="text" id="publicKey" name="publicKey" ng-model="realm.publicKey" class="form-control" rows="4"
+                              kc-select-action="click" ng-disabled="!changed">{{realm.publicKey}}</textarea>
                 </div>
             </div>
             <div class="form-group">
                 <label class="col-md-2 control-label" for="certificate">Certificate</label>
 
                 <div class="col-md-10">
-                    <textarea type="text" id="certificate" name="certificate" class="form-control" rows="8" kc-select-action="click" readonly>{{realm.certificate}}</textarea>
+                    <textarea type="text" id="certificate" name="certificate" ng-model="realm.certificate" class="form-control" rows="8" kc-select-action="click" ng-disabled="!changed">{{realm.certificate}}</textarea>
                 </div>
             </div>
         </fieldset>
 
         <div class="form-group" data-ng-show="access.manageRealm">
             <div class="col-md-10 col-md-offset-2">
-                <button class="btn btn-danger" type="submit" data-ng-click="generate()">Generate new keys</button>
+                <button class="btn btn-danger" type="submit"  data-ng-click="generate()">Generate new keys</button>
+                <button class="btn btn-default" type="submit" data-ng-click="add()" ng-show="!changed">Add</button>
+                <button class="btn btn-default" type="submit" data-ng-click="upload()" ng-show="changed" ng-disabled="!(realm.publicKey && realm.certificate)">Upload</button>
+                <button class="btn btn-default" type="submit" data-ng-click="reset()" ng-disabled="!changed">Reset</button>
             </div>
         </div>
     </form>

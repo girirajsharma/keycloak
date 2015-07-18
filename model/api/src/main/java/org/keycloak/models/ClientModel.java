@@ -1,5 +1,8 @@
 package org.keycloak.models;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -141,4 +144,11 @@ public interface ClientModel extends RoleContainerModel {
     void registerNode(String nodeHost, int registrationTime);
 
     void unregisterNode(String nodeHost);
+    
+    PublicKey getPublicKey();
+    void setPublicKey(PublicKey publicKey);
+    PrivateKey getPrivateKey();
+    void setPrivateKey(PrivateKey privateKey);
+    X509Certificate getCertificate();
+    void setCertificate(X509Certificate certificate);
 }

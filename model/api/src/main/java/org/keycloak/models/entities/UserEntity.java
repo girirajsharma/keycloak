@@ -29,6 +29,10 @@ public class UserEntity extends AbstractIdentifiableEntity {
     private String federationLink;
     private String serviceAccountClientLink;
 
+    private String publicKey;
+    private String privateKey;
+    private String certificate;
+
     public String getUsername() {
         return username;
     }
@@ -36,7 +40,7 @@ public class UserEntity extends AbstractIdentifiableEntity {
     public void setUsername(String username) {
         this.username = username;
     }
-    
+
     public Long getCreatedTimestamp() {
         return createdTimestamp;
     }
@@ -44,7 +48,6 @@ public class UserEntity extends AbstractIdentifiableEntity {
     public void setCreatedTimestamp(Long timestamp) {
         this.createdTimestamp = timestamp;
     }
-
 
     public String getFirstName() {
         return firstName;
@@ -157,5 +160,29 @@ public class UserEntity extends AbstractIdentifiableEntity {
     public void setServiceAccountClientLink(String serviceAccountClientLink) {
         this.serviceAccountClientLink = serviceAccountClientLink;
     }
-}
 
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+    }
+
+    public String getCertificate() {
+        return certificate;
+    }
+
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
+    }
+
+}

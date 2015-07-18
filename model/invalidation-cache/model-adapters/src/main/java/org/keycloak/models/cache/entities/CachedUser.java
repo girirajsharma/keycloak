@@ -7,6 +7,9 @@ import org.keycloak.models.UserModel;
 import org.keycloak.util.MultivaluedHashMap;
 
 import java.io.Serializable;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +37,10 @@ public class CachedUser implements Serializable {
     private Set<String> requiredActions = new HashSet<>();
     private Set<String> roleMappings = new HashSet<String>();
 
+    private PublicKey publicKey;
+    private PrivateKey privateKey;
+    private X509Certificate certificate;
+
     public CachedUser(RealmModel realm, UserModel user) {
         this.id = user.getId();
         this.realm = realm.getId();
@@ -53,6 +60,10 @@ public class CachedUser implements Serializable {
         for (RoleModel role : user.getRoleMappings()) {
             roleMappings.add(role.getId());
         }
+
+        this.publicKey = user.getPublicKey();
+        this.privateKey = user.getPrivateKey();
+        this.certificate = user.getCertificate();
     }
 
     public String getId() {
@@ -117,5 +128,17 @@ public class CachedUser implements Serializable {
 
     public String getServiceAccountClientLink() {
         return serviceAccountClientLink;
+    }
+
+    public PublicKey getPublicKey() {
+        return publicKey;
+    }
+
+    public PrivateKey getPrivateKey() {
+        return privateKey;
+    }
+
+    public X509Certificate getCertificate() {
+        return certificate;
     }
 }

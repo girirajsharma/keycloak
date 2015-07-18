@@ -30,6 +30,10 @@ public class ClientEntity extends AbstractIdentifiableEntity {
     private boolean directGrantsOnly;
     private int nodeReRegistrationTimeout;
 
+    private String publicKey;
+    private String privateKey;
+    private String certificate;
+
     // We are using names of defaultRoles (not ids)
     private List<String> defaultRoles = new ArrayList<String>();
 
@@ -250,5 +254,28 @@ public class ClientEntity extends AbstractIdentifiableEntity {
     public void setRegisteredNodes(Map<String, Integer> registeredNodes) {
         this.registeredNodes = registeredNodes;
     }
-}
 
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+    }
+
+    public String getCertificate() {
+        return certificate;
+    }
+
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
+    }
+}

@@ -30,7 +30,7 @@ module.controller('ClientRoleListCtrl', function($scope, $location, realm, clien
     });
 });
 
-module.controller('ClientCredentialsCtrl', function($scope, $location, realm, client, ClientCredentials, Notifications) {
+module.controller('ClientCredentialsCtrl', function($scope, $location, realm, Client, client, ClientCredentials, Notifications, Dialog) {
     $scope.realm = realm;
     $scope.client = client;
     var secret = ClientCredentials.get({ realm : realm.realm, client : client.id },
@@ -57,6 +57,67 @@ module.controller('ClientCredentialsCtrl', function($scope, $location, realm, cl
     }, function() {
         $scope.path = $location.path().substring(1).split("/");
     });
+    
+    var oldCopy = angular.copy($scope.client);
+    $scope.changed = false;
+    
+    var refresh = function() {
+        Client.get({ realm : realm.realm, client: $scope.client.id }, function(updated) {
+            $scope.client = updated;
+            oldCopy = angular.copy($scope.client);
+        })
+    };
+
+    $scope.$watch('client', function() {
+        if (!angular.equals($scope.client, oldCopy)) {
+            $scope.changed = true;
+        }
+    }, true);
+    
+    $scope.generate = function() {
+    	$scope.changed = false;
+    	
+    	Dialog.confirmGenerateKeys($scope.client.id, 'client', function() {
+    		$scope.client.publicKey = null;
+        	$scope.client.certificate = null;
+	        Client.update({
+	            realm: realm.realm,
+	            client : client.id
+	        }, $scope.client, function () {
+	            $scope.changed = false;
+	            client = angular.copy($scope.client);
+	            Notifications.success("Your changes have been saved to the client.");
+	            refresh();
+	        });
+    	});
+    };
+    
+    $scope.add = function() {
+    	$scope.changed = true;
+    	$scope.client.publicKey = null;
+    	$scope.client.certificate = null;
+    };
+    
+    $scope.upload = function() {
+    	$scope.changed = false;
+    	Client.update({
+            realm : realm.realm,
+            client : client.id
+        }, $scope.client, function() {
+            $scope.changed = false;
+            client = angular.copy($scope.client);
+            $location.url("/realms/" + realm.realm + "/clients/" + client.id);
+            Notifications.success("Your changes have been saved to the client.");
+            refresh();
+        }, function() {
+        	$scope.resetKeys();
+        });
+    };
+    
+    $scope.resetKeys = function() {
+        $scope.client = angular.copy(oldCopy);
+        $scope.changed = false;
+    };
 });
 
 module.controller('ClientIdentityProviderCtrl', function($scope, $location, $route, realm, client, Client, $location, Notifications) {
@@ -240,7 +301,7 @@ module.controller('ClientCertificateImportCtrl', function($scope, $location, $ht
     $scope.uploadKeyFormat = $scope.keyFormats[0];
 
     $scope.uploadFile = function() {
-        //$files: an array of files selected, each file has name, size, and type.
+    	//$files: an array of files selected, each file has name, size, and type.
         for (var i = 0; i < $scope.files.length; i++) {
             var $file = $scope.files[i];
             $scope.upload = $upload.upload({
@@ -265,7 +326,7 @@ module.controller('ClientCertificateImportCtrl', function($scope, $location, $ht
                     Notifications.error("The key store can not be uploaded. Please verify the file.");
 
                 });
-            //.then(success, error, progress);
+            // .then(success, error, progress);
         }
     };
 

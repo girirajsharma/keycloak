@@ -189,8 +189,13 @@ public class MongoStoreImpl implements MongoStore {
         if (cached != null && type.isAssignableFrom(cached.getClass())) return cached;
 
         DBCollection dbCollection = getDBCollectionForType(type);
-
-        BasicDBObject idQuery = new BasicDBObject("_id", id);
+        BasicDBObject idQuery = null;
+        if (id != null) {
+            idQuery = new BasicDBObject("_id", id);
+		} else {
+            idQuery = new BasicDBObject();
+        }
+        
         DBObject dbObject = dbCollection.findOne(idQuery);
 
         if (dbObject == null) return null;

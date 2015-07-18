@@ -9,6 +9,30 @@
         <delete tableName="USER_SESSION_NOTE"/>
         <delete tableName="USER_SESSION"/>
 
+        <addColumn tableName="USER_ENTITY">
+            <column name="PUBLIC_KEY" type="VARCHAR(4096)">
+            </column>
+        </addColumn>
+        <addColumn tableName="USER_ENTITY">
+            <column name="PRIVATE_KEY" type="VARCHAR(4096)">
+            </column>
+        </addColumn>
+        <addColumn tableName="USER_ENTITY">
+            <column name="CERTIFICATE" type="VARCHAR(4096)">
+            </column>
+        </addColumn>
+        <addColumn tableName="CLIENT">
+            <column name="PUBLIC_KEY" type="VARCHAR(4096)">
+            </column>
+        </addColumn>
+        <addColumn tableName="CLIENT">
+            <column name="PRIVATE_KEY" type="VARCHAR(4096)">
+            </column>
+        </addColumn>
+        <addColumn tableName="CLIENT">
+            <column name="CERTIFICATE" type="VARCHAR(4096)">
+            </column>
+        </addColumn>
         <addColumn tableName="CLIENT">
             <column name="SERVICE_ACCOUNTS_ENABLED" type="BOOLEAN" defaultValueBoolean="false">
                 <constraints nullable="false"/>
@@ -128,6 +152,23 @@
             </column>
             <column name="VALUE" type="CLOB"/>
             <column name="NAME" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="KEYCLOAK_CA_ENTITY">
+            <column name="ID" type="VARCHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ROOT_CA_PUBLIC_KEY" type="VARCHAR(4096)">
+            	<constraints nullable="false"/>
+            </column>
+            <column name="ROOT_CA_PRIVATE_KEY" type="VARCHAR(4096)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ROOT_CA_CERTIFICATE" type="VARCHAR(4096)">
+            	<constraints nullable="false"/>
+            </column>
+            <column name="ROOT_CA_CRL_HOLDER" type="VARCHAR(25550)">
                 <constraints nullable="false"/>
             </column>
         </createTable>

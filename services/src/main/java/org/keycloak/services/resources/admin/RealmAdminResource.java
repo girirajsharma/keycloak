@@ -185,7 +185,7 @@ public class RealmAdminResource {
 
         logger.debug("updating realm: " + realm.getName());
         try {
-            RepresentationToModel.updateRealm(rep, realm);
+            RepresentationToModel.updateRealm(session, rep, realm);
             if (rep.isRealmCacheEnabled() != null && session.realms() instanceof CacheRealmProvider) {
                 CacheRealmProvider cacheRealmProvider = (CacheRealmProvider)session.realms();
                 cacheRealmProvider.setEnabled(rep.isRealmCacheEnabled());

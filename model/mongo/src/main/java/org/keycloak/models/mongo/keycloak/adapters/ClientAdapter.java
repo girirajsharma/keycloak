@@ -2,6 +2,7 @@ package org.keycloak.models.mongo.keycloak.adapters;
 
 import com.mongodb.DBObject;
 import com.mongodb.QueryBuilder;
+
 import org.keycloak.connections.mongo.api.context.MongoStoreInvocationContext;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.KeycloakSession;
@@ -14,6 +15,9 @@ import org.keycloak.models.mongo.keycloak.entities.MongoRoleEntity;
 import org.keycloak.models.mongo.utils.MongoModelUtils;
 import org.keycloak.models.utils.KeycloakModelUtils;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,7 +33,7 @@ public class ClientAdapter extends AbstractMongoAdapter<MongoClientEntity> imple
 
     protected final MongoClientEntity clientEntity;
     private final RealmModel realm;
-    protected  KeycloakSession session;
+    protected KeycloakSession session;
 
     public ClientAdapter(KeycloakSession session, RealmModel realm, MongoClientEntity clientEntity, MongoStoreInvocationContext invContext) {
         super(invContext);
@@ -47,7 +51,6 @@ public class ClientAdapter extends AbstractMongoAdapter<MongoClientEntity> imple
     public void updateClient() {
         updateMongoEntity();
     }
-
 
     @Override
     public String getId() {
@@ -168,7 +171,6 @@ public class ClientAdapter extends AbstractMongoAdapter<MongoClientEntity> imple
         updateMongoEntity();
     }
 
-
     @Override
     public boolean isFrontchannelLogout() {
         return getMongoEntity().isFrontchannelLogout();
@@ -228,7 +230,8 @@ public class ClientAdapter extends AbstractMongoAdapter<MongoClientEntity> imple
     public Set<RoleModel> getRealmScopeMappings() {
         Set<RoleModel> allScopes = getScopeMappings();
 
-        // Filter to retrieve just realm roles TODO: Maybe improve to avoid filter programmatically... Maybe have separate fields for realmRoles and appRoles on user?
+        // Filter to retrieve just realm roles TODO: Maybe improve to avoid filter programmatically... Maybe have separate
+        // fields for realmRoles and appRoles on user?
         Set<RoleModel> realmRoles = new HashSet<RoleModel>();
         for (RoleModel role : allScopes) {
             MongoRoleEntity roleEntity = ((RoleAdapter) role).getRole();
@@ -350,6 +353,7 @@ public class ClientAdapter extends AbstractMongoAdapter<MongoClientEntity> imple
         return null;
 
     }
+
     protected ProtocolMapperEntity getProtocolMapperEntityByName(String protocol, String name) {
         for (ProtocolMapperEntity entity : getMongoEntity().getProtocolMappers()) {
             if (entity.getProtocol().equals(protocol) && entity.getName().equals(name)) {
@@ -359,7 +363,6 @@ public class ClientAdapter extends AbstractMongoAdapter<MongoClientEntity> imple
         return null;
 
     }
-
 
     @Override
     public void updateProtocolMapper(ProtocolMapperModel mapping) {
@@ -380,14 +383,16 @@ public class ClientAdapter extends AbstractMongoAdapter<MongoClientEntity> imple
     @Override
     public ProtocolMapperModel getProtocolMapperById(String id) {
         ProtocolMapperEntity entity = getProtocolMapperyEntityById(id);
-        if (entity == null) return null;
+        if (entity == null)
+            return null;
         return entityToModel(entity);
     }
 
     @Override
     public ProtocolMapperModel getProtocolMapperByName(String protocol, String name) {
         ProtocolMapperEntity entity = getProtocolMapperEntityByName(protocol, name);
-        if (entity == null) return null;
+        if (entity == null)
+            return null;
         return entityToModel(entity);
     }
 
@@ -400,11 +405,11 @@ public class ClientAdapter extends AbstractMongoAdapter<MongoClientEntity> imple
         mapping.setConsentRequired(entity.isConsentRequired());
         mapping.setConsentText(entity.getConsentText());
         Map<String, String> config = new HashMap<String, String>();
-        if (entity.getConfig() != null) config.putAll(entity.getConfig());
+        if (entity.getConfig() != null)
+            config.putAll(entity.getConfig());
         mapping.setConfig(config);
         return mapping;
     }
-
 
     @Override
     public boolean isSurrogateAuthRequired() {
@@ -486,9 +491,9 @@ public class ClientAdapter extends AbstractMongoAdapter<MongoClientEntity> imple
     @Override
     public RoleAdapter getRole(String name) {
         DBObject query = new QueryBuilder()
-                .and("name").is(name)
-                .and("clientId").is(getId())
-                .get();
+            .and("name").is(name)
+            .and("clientId").is(getId())
+            .get();
         MongoRoleEntity role = getMongoStore().loadSingleEntity(MongoRoleEntity.class, query, invocationContext);
         if (role == null) {
             return null;
@@ -523,8 +528,8 @@ public class ClientAdapter extends AbstractMongoAdapter<MongoClientEntity> imple
     @Override
     public Set<RoleModel> getRoles() {
         DBObject query = new QueryBuilder()
-                .and("clientId").is(getId())
-                .get();
+            .and("clientId").is(getId())
+            .get();
         List<MongoRoleEntity> roles = getMongoStore().loadEntities(MongoRoleEntity.class, query, invocationContext);
 
         Set<RoleModel> result = new HashSet<RoleModel>();
@@ -537,19 +542,24 @@ public class ClientAdapter extends AbstractMongoAdapter<MongoClientEntity> imple
 
     @Override
     public boolean hasScope(RoleModel role) {
-        if (isFullScopeAllowed()) return true;
+        if (isFullScopeAllowed())
+            return true;
         Set<RoleModel> roles = getScopeMappings();
-        if (roles.contains(role)) return true;
+        if (roles.contains(role))
+            return true;
 
         for (RoleModel mapping : roles) {
-            if (mapping.hasRole(role)) return true;
+            if (mapping.hasRole(role))
+                return true;
         }
 
         roles = getRoles();
-        if (roles.contains(role)) return true;
+        if (roles.contains(role))
+            return true;
 
         for (RoleModel mapping : roles) {
-            if (mapping.hasRole(role)) return true;
+            if (mapping.hasRole(role))
+                return true;
         }
         return false;
     }
@@ -611,7 +621,7 @@ public class ClientAdapter extends AbstractMongoAdapter<MongoClientEntity> imple
 
     @Override
     public Map<String, Integer> getRegisteredNodes() {
-        return getMongoEntity().getRegisteredNodes() == null ? Collections.<String, Integer>emptyMap() : Collections.unmodifiableMap(getMongoEntity().getRegisteredNodes());
+        return getMongoEntity().getRegisteredNodes() == null ? Collections.<String, Integer> emptyMap() : Collections.unmodifiableMap(getMongoEntity().getRegisteredNodes());
     }
 
     @Override
@@ -628,16 +638,52 @@ public class ClientAdapter extends AbstractMongoAdapter<MongoClientEntity> imple
     @Override
     public void unregisterNode(String nodeHost) {
         MongoClientEntity entity = getMongoEntity();
-        if (entity.getRegisteredNodes() == null) return;
+        if (entity.getRegisteredNodes() == null)
+            return;
 
         entity.getRegisteredNodes().remove(nodeHost);
         updateMongoEntity();
     }
 
     @Override
+    public PublicKey getPublicKey() {
+        return KeycloakModelUtils.getPublicKeyFromPem(getMongoEntity().getPublicKey());
+    }
+
+    @Override
+    public void setPublicKey(PublicKey publicKey) {
+        getMongoEntity().setPublicKey(KeycloakModelUtils.getPemFromKey(publicKey));
+        updateMongoEntity();
+    }
+
+    @Override
+    public PrivateKey getPrivateKey() {
+        return KeycloakModelUtils.getPrivateKeyFromPem(getMongoEntity().getPrivateKey());
+    }
+
+    @Override
+    public void setPrivateKey(PrivateKey privateKey) {
+        getMongoEntity().setPrivateKey(KeycloakModelUtils.getPemFromKey(privateKey));
+        updateMongoEntity();
+    }
+
+    @Override
+    public X509Certificate getCertificate() {
+        return KeycloakModelUtils.getCertificateFromPem(getMongoEntity().getCertificate());
+    }
+
+    @Override
+    public void setCertificate(X509Certificate certificate) {
+        getMongoEntity().setCertificate(KeycloakModelUtils.getPemFromCertificate(certificate));
+        updateMongoEntity();
+    }
+
+    @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || !(o instanceof ClientModel)) return false;
+        if (this == o)
+            return true;
+        if (o == null || !(o instanceof ClientModel))
+            return false;
 
         ClientModel that = (ClientModel) o;
         return that.getId().equals(getId());
@@ -647,6 +693,5 @@ public class ClientAdapter extends AbstractMongoAdapter<MongoClientEntity> imple
     public int hashCode() {
         return getId().hashCode();
     }
-
 
 }

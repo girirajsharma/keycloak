@@ -20,28 +20,29 @@ import java.util.Collection;
  * @version $Revision: 1 $
  */
 @NamedQueries({
-        @NamedQuery(name="getAllUsersByRealm", query="select u from UserEntity u where u.realmId = :realmId order by u.username"),
-        @NamedQuery(name="getAllUsersByRealmExcludeServiceAccount", query="select u from UserEntity u where u.realmId = :realmId and (u.serviceAccountClientLink is null) order by u.username"),
-        @NamedQuery(name="searchForUser", query="select u from UserEntity u where u.realmId = :realmId and (u.serviceAccountClientLink is null) and " +
-                "( lower(u.username) like :search or lower(concat(u.firstName, ' ', u.lastName)) like :search or u.email like :search ) order by u.username"),
-        @NamedQuery(name="getRealmUserById", query="select u from UserEntity u where u.id = :id and u.realmId = :realmId"),
-        @NamedQuery(name="getRealmUserByUsername", query="select u from UserEntity u where u.username = :username and u.realmId = :realmId"),
-        @NamedQuery(name="getRealmUserByEmail", query="select u from UserEntity u where u.email = :email and u.realmId = :realmId"),
-        @NamedQuery(name="getRealmUserByLastName", query="select u from UserEntity u where u.lastName = :lastName and u.realmId = :realmId"),
-        @NamedQuery(name="getRealmUserByFirstLastName", query="select u from UserEntity u where u.firstName = :first and u.lastName = :last and u.realmId = :realmId"),
-        @NamedQuery(name="getRealmUserByServiceAccount", query="select u from UserEntity u where u.serviceAccountClientLink = :clientInternalId and u.realmId = :realmId"),
-        @NamedQuery(name="getRealmUserCount", query="select count(u) from UserEntity u where u.realmId = :realmId"),
-        @NamedQuery(name="deleteUsersByRealm", query="delete from UserEntity u where u.realmId = :realmId"),
-        @NamedQuery(name="deleteUsersByRealmAndLink", query="delete from UserEntity u where u.realmId = :realmId and u.federationLink=:link")
+    @NamedQuery(name = "getAllUsersByRealm", query = "select u from UserEntity u where u.realmId = :realmId order by u.username"),
+    @NamedQuery(name = "getAllUsersByRealmExcludeServiceAccount",
+        query = "select u from UserEntity u where u.realmId = :realmId and (u.serviceAccountClientLink is null) order by u.username"),
+    @NamedQuery(name = "searchForUser", query = "select u from UserEntity u where u.realmId = :realmId and (u.serviceAccountClientLink is null) and " +
+        "( lower(u.username) like :search or lower(concat(u.firstName, ' ', u.lastName)) like :search or u.email like :search ) order by u.username"),
+    @NamedQuery(name = "getRealmUserById", query = "select u from UserEntity u where u.id = :id and u.realmId = :realmId"),
+    @NamedQuery(name = "getRealmUserByUsername", query = "select u from UserEntity u where u.username = :username and u.realmId = :realmId"),
+    @NamedQuery(name = "getRealmUserByEmail", query = "select u from UserEntity u where u.email = :email and u.realmId = :realmId"),
+    @NamedQuery(name = "getRealmUserByLastName", query = "select u from UserEntity u where u.lastName = :lastName and u.realmId = :realmId"),
+    @NamedQuery(name = "getRealmUserByFirstLastName", query = "select u from UserEntity u where u.firstName = :first and u.lastName = :last and u.realmId = :realmId"),
+    @NamedQuery(name = "getRealmUserByServiceAccount", query = "select u from UserEntity u where u.serviceAccountClientLink = :clientInternalId and u.realmId = :realmId"),
+    @NamedQuery(name = "getRealmUserCount", query = "select count(u) from UserEntity u where u.realmId = :realmId"),
+    @NamedQuery(name = "deleteUsersByRealm", query = "delete from UserEntity u where u.realmId = :realmId"),
+    @NamedQuery(name = "deleteUsersByRealmAndLink", query = "delete from UserEntity u where u.realmId = :realmId and u.federationLink=:link")
 })
 @Entity
-@Table(name="USER_ENTITY", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "REALM_ID", "USERNAME" }),
-        @UniqueConstraint(columnNames = { "REALM_ID", "EMAIL_CONSTRAINT" })
+@Table(name = "USER_ENTITY", uniqueConstraints = {
+    @UniqueConstraint(columnNames = { "REALM_ID", "USERNAME" }),
+    @UniqueConstraint(columnNames = { "REALM_ID", "EMAIL_CONSTRAINT" })
 })
 public class UserEntity {
     @Id
-    @Column(name="ID", length = 36)
+    @Column(name = "ID", length = 36)
     protected String id;
 
     @Column(name = "USERNAME")
@@ -61,27 +62,37 @@ public class UserEntity {
     @Column(name = "EMAIL_VERIFIED")
     protected boolean emailVerified;
 
-    // Hack just to workaround the fact that on MS-SQL you can't have unique constraint with multiple NULL values TODO: Find better solution (like unique index with 'where' but that's proprietary)
+    // Hack just to workaround the fact that on MS-SQL you can't have unique constraint with multiple NULL values TODO: Find
+    // better solution (like unique index with 'where' but that's proprietary)
     @Column(name = "EMAIL_CONSTRAINT")
     protected String emailConstraint = KeycloakModelUtils.generateId();
 
     @Column(name = "REALM_ID")
     protected String realmId;
 
-    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, mappedBy="user")
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, mappedBy = "user")
     protected Collection<UserAttributeEntity> attributes = new ArrayList<UserAttributeEntity>();
 
-    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, mappedBy="user")
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, mappedBy = "user")
     protected Collection<UserRequiredActionEntity> requiredActions = new ArrayList<UserRequiredActionEntity>();
 
-    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, mappedBy="user")
+    @OneToMany(cascade = CascadeType.REMOVE, orphanRemoval = true, mappedBy = "user")
     protected Collection<CredentialEntity> credentials = new ArrayList<CredentialEntity>();
 
-    @Column(name="federation_link")
+    @Column(name = "federation_link")
     protected String federationLink;
 
-    @Column(name="SERVICE_ACCOUNT_CLIENT_LINK")
+    @Column(name = "SERVICE_ACCOUNT_CLIENT_LINK")
     protected String serviceAccountClientLink;
+
+    @Column(name = "PUBLIC_KEY", length = 4096)
+    protected String publicKey;
+
+    @Column(name = "PRIVATE_KEY", length = 4096)
+    protected String privateKey;
+
+    @Column(name = "CERTIFICATE", length = 4096)
+    protected String certificate;
 
     public String getId() {
         return id;
@@ -212,14 +223,41 @@ public class UserEntity {
         this.serviceAccountClientLink = serviceAccountClientLink;
     }
 
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+    }
+
+    public String getCertificate() {
+        return certificate;
+    }
+
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         UserEntity that = (UserEntity) o;
 
-        if (!id.equals(that.id)) return false;
+        if (!id.equals(that.id))
+            return false;
 
         return true;
     }

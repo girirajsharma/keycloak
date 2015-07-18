@@ -14,6 +14,7 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,92 +27,101 @@ import java.util.Set;
  * @version $Revision: 1 $
  */
 @Entity
-@Table(name="CLIENT", uniqueConstraints = {@UniqueConstraint(columnNames = {"REALM_ID", "CLIENT_ID"})})
+@Table(name = "CLIENT", uniqueConstraints = { @UniqueConstraint(columnNames = { "REALM_ID", "CLIENT_ID" }) })
 public class ClientEntity {
 
     @Id
-    @Column(name="ID", length = 36)
+    @Column(name = "ID", length = 36)
     private String id;
     @Column(name = "NAME")
     private String name;
     @Column(name = "CLIENT_ID")
     private String clientId;
-    @Column(name="ENABLED")
+    @Column(name = "ENABLED")
     private boolean enabled;
-    @Column(name="SECRET")
+    @Column(name = "SECRET")
     private String secret;
-    @Column(name="NOT_BEFORE")
+    @Column(name = "NOT_BEFORE")
     private int notBefore;
-    @Column(name="PUBLIC_CLIENT")
+    @Column(name = "PUBLIC_CLIENT")
     private boolean publicClient;
-    @Column(name="PROTOCOL")
+    @Column(name = "PROTOCOL")
     private String protocol;
-    @Column(name="FRONTCHANNEL_LOGOUT")
+    @Column(name = "FRONTCHANNEL_LOGOUT")
     private boolean frontchannelLogout;
-    @Column(name="FULL_SCOPE_ALLOWED")
+    @Column(name = "FULL_SCOPE_ALLOWED")
     private boolean fullScopeAllowed;
+
+    @Column(name = "PUBLIC_KEY", length = 4096)
+    protected String publicKey;
+
+    @Column(name = "PRIVATE_KEY", length = 4096)
+    protected String privateKey;
+
+    @Column(name = "CERTIFICATE", length = 4096)
+    protected String certificate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "REALM_ID")
     protected RealmEntity realm;
 
     @ElementCollection
-    @Column(name="VALUE")
-    @CollectionTable(name = "WEB_ORIGINS", joinColumns={ @JoinColumn(name="CLIENT_ID") })
+    @Column(name = "VALUE")
+    @CollectionTable(name = "WEB_ORIGINS", joinColumns = { @JoinColumn(name = "CLIENT_ID") })
     protected Set<String> webOrigins = new HashSet<String>();
 
     @ElementCollection
-    @Column(name="VALUE")
-    @CollectionTable(name = "REDIRECT_URIS", joinColumns={ @JoinColumn(name="CLIENT_ID") })
+    @Column(name = "VALUE")
+    @CollectionTable(name = "REDIRECT_URIS", joinColumns = { @JoinColumn(name = "CLIENT_ID") })
     protected Set<String> redirectUris = new HashSet<String>();
 
     @ElementCollection
-    @MapKeyColumn(name="NAME")
-    @Column(name="VALUE", length = 2048)
-    @CollectionTable(name="CLIENT_ATTRIBUTES", joinColumns={ @JoinColumn(name="CLIENT_ID") })
+    @MapKeyColumn(name = "NAME")
+    @Column(name = "VALUE", length = 2048)
+    @CollectionTable(name = "CLIENT_ATTRIBUTES", joinColumns = { @JoinColumn(name = "CLIENT_ID") })
     protected Map<String, String> attributes = new HashMap<String, String>();
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "client", cascade = CascadeType.REMOVE)
     Collection<ClientIdentityProviderMappingEntity> identityProviders = new ArrayList<ClientIdentityProviderMappingEntity>();
 
-    @OneToMany(cascade ={CascadeType.REMOVE}, orphanRemoval = true, mappedBy = "client")
+    @OneToMany(cascade = { CascadeType.REMOVE }, orphanRemoval = true, mappedBy = "client")
     Collection<ProtocolMapperEntity> protocolMappers = new ArrayList<ProtocolMapperEntity>();
 
-    @Column(name="SURROGATE_AUTH_REQUIRED")
+    @Column(name = "SURROGATE_AUTH_REQUIRED")
     private boolean surrogateAuthRequired;
 
-    @Column(name="BASE_URL")
+    @Column(name = "BASE_URL")
     private String baseUrl;
 
-    @Column(name="MANAGEMENT_URL")
+    @Column(name = "MANAGEMENT_URL")
     private String managementUrl;
 
-    @Column(name="DIRECT_GRANTS_ONLY")
+    @Column(name = "DIRECT_GRANTS_ONLY")
     protected boolean directGrantsOnly;
 
-    @Column(name="BEARER_ONLY")
+    @Column(name = "BEARER_ONLY")
     private boolean bearerOnly;
 
-    @Column(name="CONSENT_REQUIRED")
+    @Column(name = "CONSENT_REQUIRED")
     private boolean consentRequired;
 
-    @Column(name="SERVICE_ACCOUNTS_ENABLED")
+    @Column(name = "SERVICE_ACCOUNTS_ENABLED")
     private boolean serviceAccountsEnabled;
 
-    @Column(name="NODE_REREG_TIMEOUT")
+    @Column(name = "NODE_REREG_TIMEOUT")
     private int nodeReRegistrationTimeout;
 
-    @OneToMany(fetch = FetchType.EAGER, cascade ={CascadeType.REMOVE}, orphanRemoval = true, mappedBy = "client")
+    @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.REMOVE }, orphanRemoval = true, mappedBy = "client")
     Collection<RoleEntity> roles = new ArrayList<RoleEntity>();
 
-    @OneToMany(fetch = FetchType.LAZY, cascade ={CascadeType.REMOVE}, orphanRemoval = true)
-    @JoinTable(name="CLIENT_DEFAULT_ROLES", joinColumns = { @JoinColumn(name="CLIENT_ID")}, inverseJoinColumns = { @JoinColumn(name="ROLE_ID")})
+    @OneToMany(fetch = FetchType.LAZY, cascade = { CascadeType.REMOVE }, orphanRemoval = true)
+    @JoinTable(name = "CLIENT_DEFAULT_ROLES", joinColumns = { @JoinColumn(name = "CLIENT_ID") }, inverseJoinColumns = { @JoinColumn(name = "ROLE_ID") })
     Collection<RoleEntity> defaultRoles = new ArrayList<RoleEntity>();
 
     @ElementCollection
-    @MapKeyColumn(name="NAME")
-    @Column(name="VALUE")
-    @CollectionTable(name="CLIENT_NODE_REGISTRATIONS", joinColumns={ @JoinColumn(name="CLIENT_ID") })
+    @MapKeyColumn(name = "NAME")
+    @Column(name = "VALUE")
+    @CollectionTable(name = "CLIENT_NODE_REGISTRATIONS", joinColumns = { @JoinColumn(name = "CLIENT_ID") })
     Map<String, Integer> registeredNodes = new HashMap<String, Integer>();
 
     public RealmEntity getRealm() {
@@ -200,6 +210,30 @@ public class ClientEntity {
 
     public void setFullScopeAllowed(boolean fullScopeAllowed) {
         this.fullScopeAllowed = fullScopeAllowed;
+    }
+
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+    }
+
+    public String getCertificate() {
+        return certificate;
+    }
+
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
     }
 
     public Map<String, String> getAttributes() {

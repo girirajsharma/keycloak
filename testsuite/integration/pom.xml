@@ -337,6 +337,8 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <systemPropertyVariables>
+                                <keycloak.keycloakCA.provider>jpa</keycloak.keycloakCA.provider>
+                                <keycloak.pki.provider>certificate</keycloak.pki.provider>
                                 <keycloak.realm.provider>jpa</keycloak.realm.provider>
                                 <keycloak.user.provider>jpa</keycloak.user.provider>
                                 <keycloak.eventsStore.provider>jpa</keycloak.eventsStore.provider>
@@ -401,6 +403,8 @@
                                 </goals>
                                 <configuration>
                                     <systemPropertyVariables>
+                                        <keycloak.keycloakCA.provider>mongo</keycloak.keycloakCA.provider>
+                                        <keycloak.pki.provider>certificate</keycloak.pki.provider>
                                         <keycloak.realm.provider>mongo</keycloak.realm.provider>
                                         <keycloak.user.provider>mongo</keycloak.user.provider>
                                         <keycloak.eventsStore.provider>mongo</keycloak.eventsStore.provider>

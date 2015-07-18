@@ -393,7 +393,7 @@ public class RealmAdapter extends AbstractMongoAdapter<MongoRealmEntity> impleme
     @Override
     public X509Certificate getCertificate() {
         if (certificate != null) return certificate;
-        certificate = KeycloakModelUtils.getCertificate(getCertificatePem());
+        certificate = KeycloakModelUtils.getCertificateFromPem(getCertificatePem());
         return certificate;
     }
 
@@ -432,7 +432,7 @@ public class RealmAdapter extends AbstractMongoAdapter<MongoRealmEntity> impleme
     @Override
     public PublicKey getPublicKey() {
         if (publicKey != null) return publicKey;
-        publicKey = KeycloakModelUtils.getPublicKey(getPublicKeyPem());
+        publicKey = KeycloakModelUtils.getPublicKeyFromPem(getPublicKeyPem());
         return publicKey;
     }
 
@@ -446,7 +446,7 @@ public class RealmAdapter extends AbstractMongoAdapter<MongoRealmEntity> impleme
     @Override
     public PrivateKey getPrivateKey() {
         if (privateKey != null) return privateKey;
-        privateKey = KeycloakModelUtils.getPrivateKey(getPrivateKeyPem());
+        privateKey = KeycloakModelUtils.getPrivateKeyFromPem(getPrivateKeyPem());
         return privateKey;
     }
 

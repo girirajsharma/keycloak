@@ -7,6 +7,9 @@ import org.keycloak.models.UserCredentialModel;
 import org.keycloak.models.UserCredentialValueModel;
 import org.keycloak.models.UserModel;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -245,14 +248,45 @@ public class UserModelDelegate implements UserModel {
     public UserModel getDelegate() {
         return delegate;
     }
-    
+
     @Override
-    public Long getCreatedTimestamp(){
+    public Long getCreatedTimestamp() {
         return delegate.getCreatedTimestamp();
     }
-    
+
     @Override
-    public void setCreatedTimestamp(Long timestamp){
+    public void setCreatedTimestamp(Long timestamp) {
         delegate.setCreatedTimestamp(timestamp);
+    }
+
+    @Override
+    public PublicKey getPublicKey() {
+        return delegate.getPublicKey();
+    }
+
+    @Override
+    public void setPublicKey(PublicKey publicKey) {
+        delegate.setPublicKey(publicKey);
+
+    }
+
+    @Override
+    public PrivateKey getPrivateKey() {
+        return delegate.getPrivateKey();
+    }
+
+    @Override
+    public void setPrivateKey(PrivateKey privateKey) {
+        delegate.setPrivateKey(privateKey);
+    }
+
+    @Override
+    public X509Certificate getCertificate() {
+        return delegate.getCertificate();
+    }
+
+    @Override
+    public void setCertificate(X509Certificate certificate) {
+        delegate.setCertificate(certificate);
     }
 }

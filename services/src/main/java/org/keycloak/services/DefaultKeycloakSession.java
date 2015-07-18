@@ -1,7 +1,6 @@
 package org.keycloak.services;
 
-import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.keycloak.models.KeycloakCAProvider;
 import org.keycloak.models.KeycloakContext;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
@@ -15,7 +14,6 @@ import org.keycloak.models.cache.CacheUserProvider;
 import org.keycloak.provider.Provider;
 import org.keycloak.provider.ProviderFactory;
 
-import javax.ws.rs.core.UriInfo;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -33,6 +31,7 @@ public class DefaultKeycloakSession implements KeycloakSession {
     private final List<Provider> closable = new LinkedList<Provider>();
     private final DefaultKeycloakTransactionManager transactionManager;
     private RealmProvider model;
+    private KeycloakCAProvider caModel;
     private UserProvider userModel;
     private UserSessionProvider sessionProvider;
     private UserFederationManager federationManager;
@@ -64,6 +63,11 @@ public class DefaultKeycloakSession implements KeycloakSession {
         } else {
             return getProvider(UserProvider.class);
         }
+    }
+
+    // TODO: If required, implement KeycloakCA cache providers and fetch from Cache Provider
+    private KeycloakCAProvider getKeycloakCAProvider() {
+        return getProvider(KeycloakCAProvider.class);
     }
 
     @Override
@@ -148,6 +152,14 @@ public class DefaultKeycloakSession implements KeycloakSession {
             sessionProvider = getProvider(UserSessionProvider.class);
         }
         return sessionProvider;
+    }
+
+    @Override
+    public KeycloakCAProvider keycloakCA() {
+        if (caModel == null) {
+            caModel = getKeycloakCAProvider();
+        }
+        return caModel;
     }
 
     public void close() {

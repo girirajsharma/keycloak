@@ -1,13 +1,11 @@
 package org.keycloak.representations.idm;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
-import org.keycloak.util.MultivaluedHashMap;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -28,8 +26,13 @@ public class UserRepresentation {
     protected String federationLink;
     protected String serviceAccountClientId; // For rep, it points to clientId (not DB ID)
 
+    protected String publicKey;
+    protected String privateKey;
+    protected String certificate;
+
     // Currently there is Map<String, List<String>> but for backwards compatibility, we also need to support Map<String, String>
     protected Map<String, Object> attributes;
+
     protected List<CredentialRepresentation> credentials;
     protected List<String> requiredActions;
     protected List<FederatedIdentityRepresentation> federatedIdentities;
@@ -126,7 +129,8 @@ public class UserRepresentation {
         return attributes;
     }
 
-    // This method can be removed once we can remove backwards compatibility with Keycloak 1.3 (then getAttributes() can be changed to return Map<String, List<String>> )
+    // This method can be removed once we can remove backwards compatibility with Keycloak 1.3 (then getAttributes() can be
+    // changed to return Map<String, List<String>> )
     @JsonIgnore
     public Map<String, List<String>> getAttributesAsListValues() {
         return (Map) attributes;
@@ -137,7 +141,8 @@ public class UserRepresentation {
     }
 
     public UserRepresentation singleAttribute(String name, String value) {
-        if (this.attributes == null) attributes = new HashMap<>();
+        if (this.attributes == null)
+            attributes = new HashMap<>();
         attributes.put(name, Arrays.asList(value));
         return this;
     }
@@ -218,4 +223,29 @@ public class UserRepresentation {
     public void setServiceAccountClientId(String serviceAccountClientId) {
         this.serviceAccountClientId = serviceAccountClientId;
     }
+
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+    }
+
+    public String getCertificate() {
+        return certificate;
+    }
+
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
+    }
+
 }

@@ -68,9 +68,13 @@ public class ModelToRepresentation {
         rep.setTotp(user.isOtpEnabled());
         rep.setFederationLink(user.getFederationLink());
 
+        rep.setPublicKey(KeycloakModelUtils.getPemFromKey(user.getPublicKey()));
+        rep.setPrivateKey(KeycloakModelUtils.getPemFromKey(user.getPrivateKey()));
+        rep.setCertificate(KeycloakModelUtils.getPemFromCertificate(user.getCertificate()));
+
         List<String> reqActions = new ArrayList<String>();
         Set<String> requiredActions = user.getRequiredActions();
-        for (String ra : requiredActions){
+        for (String ra : requiredActions) {
             reqActions.add(ra);
         }
 
@@ -100,7 +104,8 @@ public class ModelToRepresentation {
         rep.setEnabled(realm.isEnabled());
         rep.setNotBefore(realm.getNotBefore());
         rep.setSslRequired(realm.getSslRequired().name().toLowerCase());
-        rep.setPublicKey(realm.getPublicKeyPem());
+
+        rep.setPublicKey(KeycloakModelUtils.getPemFromKey(realm.getPublicKey()));
         if (internal) {
             rep.setPrivateKey(realm.getPrivateKeyPem());
             String privateKeyPem = realm.getPrivateKeyPem();
@@ -109,7 +114,8 @@ public class ModelToRepresentation {
             }
             rep.setCodeSecret(realm.getCodeSecret());
         }
-        rep.setCertificate(realm.getCertificatePem());
+        rep.setCertificate(KeycloakModelUtils.getPemFromCertificate(realm.getCertificate()));
+
         rep.setRegistrationAllowed(realm.isRegistrationAllowed());
         rep.setRegistrationEmailAsUsername(realm.isRegistrationEmailAsUsername());
         rep.setRememberMe(realm.isRememberMe());
@@ -160,9 +166,12 @@ public class ModelToRepresentation {
         rep.setOtpPolicyInitialCounter(otpPolicy.getInitialCounter());
         rep.setOtpPolicyType(otpPolicy.getType());
         rep.setOtpPolicyLookAheadWindow(otpPolicy.getLookAheadWindow());
-        if (realm.getBrowserFlow() != null) rep.setBrowserFlow(realm.getBrowserFlow().getAlias());
-        if (realm.getRegistrationFlow() != null) rep.setRegistrationFlow(realm.getRegistrationFlow().getAlias());
-        if (realm.getDirectGrantFlow() != null) rep.setDirectGrantFlow(realm.getDirectGrantFlow().getAlias());
+        if (realm.getBrowserFlow() != null)
+            rep.setBrowserFlow(realm.getBrowserFlow().getAlias());
+        if (realm.getRegistrationFlow() != null)
+            rep.setRegistrationFlow(realm.getRegistrationFlow().getAlias());
+        if (realm.getDirectGrantFlow() != null)
+            rep.setDirectGrantFlow(realm.getDirectGrantFlow().getAlias());
 
         List<String> defaultRoles = realm.getDefaultRoles();
         if (!defaultRoles.isEmpty()) {
@@ -232,7 +241,6 @@ public class ModelToRepresentation {
         }
     }
 
-
     public static RealmEventsConfigRepresentation toEventsConfigReprensetation(RealmModel realm) {
         RealmEventsConfigRepresentation rep = new RealmEventsConfigRepresentation();
         rep.setEventsEnabled(realm.isEventsEnabled());
@@ -244,15 +252,15 @@ public class ModelToRepresentation {
         if (realm.getEventsListeners() != null) {
             rep.setEventsListeners(new LinkedList<String>(realm.getEventsListeners()));
         }
-        
-        if(realm.getEnabledEventTypes() != null) {
+
+        if (realm.getEnabledEventTypes() != null) {
             rep.setEnabledEventTypes(new LinkedList<String>(realm.getEnabledEventTypes()));
         }
-        
+
         rep.setAdminEventsEnabled(realm.isAdminEventsEnabled());
-        
+
         rep.setAdminEventsDetailsEnabled(realm.isAdminEventsDetailsEnabled());
-        
+
         return rep;
     }
 
@@ -306,6 +314,10 @@ public class ModelToRepresentation {
         rep.setBaseUrl(clientModel.getBaseUrl());
         rep.setNotBefore(clientModel.getNotBefore());
         rep.setNodeReRegistrationTimeout(clientModel.getNodeReRegistrationTimeout());
+
+        rep.setPublicKey(KeycloakModelUtils.getPemFromKey(clientModel.getPublicKey()));
+        rep.setPrivateKey(KeycloakModelUtils.getPemFromKey(clientModel.getPrivateKey()));
+        rep.setCertificate(KeycloakModelUtils.getPemFromCertificate(clientModel.getCertificate()));
 
         Set<String> redirectUris = clientModel.getRedirectUris();
         if (redirectUris != null) {
@@ -442,7 +454,6 @@ public class ModelToRepresentation {
             }
         }
 
-
         UserConsentRepresentation consentRep = new UserConsentRepresentation();
         consentRep.setClientId(clientId);
         consentRep.setGrantedProtocolMappers(grantedProtocolMappers);
@@ -451,7 +462,7 @@ public class ModelToRepresentation {
         return consentRep;
     }
 
-    public static AuthenticationFlowRepresentation  toRepresentation(RealmModel realm, AuthenticationFlowModel model) {
+    public static AuthenticationFlowRepresentation toRepresentation(RealmModel realm, AuthenticationFlowModel model) {
         AuthenticationFlowRepresentation rep = new AuthenticationFlowRepresentation();
         rep.setBuiltIn(model.isBuiltIn());
         rep.setTopLevel(model.isTopLevel());
@@ -477,7 +488,7 @@ public class ModelToRepresentation {
         if (model.getFlowId() != null) {
             AuthenticationFlowModel flow = realm.getAuthenticationFlowById(model.getFlowId());
             rep.setFlowAlias(flow.getAlias());
-       }
+        }
         rep.setPriority(model.getPriority());
         rep.setRequirement(model.getRequirement().name());
         return rep;
@@ -500,10 +511,5 @@ public class ModelToRepresentation {
         rep.setProviderId(model.getProviderId());
         return rep;
     }
-
-
-
-
-
 
 }

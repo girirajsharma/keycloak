@@ -29,11 +29,13 @@ import org.keycloak.util.Time;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -292,7 +294,7 @@ public class UserAdapter implements UserModel {
 
         if (cred.getType().equals(UserCredentialModel.PASSWORD)) {
             updatePasswordCredential(cred);
-        } else if (UserCredentialModel.isOtp(cred.getType())){
+        } else if (UserCredentialModel.isOtp(cred.getType())) {
             updateOtpCredential(cred);
 
         } else {
@@ -334,9 +336,6 @@ public class UserAdapter implements UserModel {
         }
     }
 
-
-
-
     private void updatePasswordCredential(UserCredentialModel cred) {
         CredentialEntity credentialEntity = getCredentialEntity(user, cred.getType());
 
@@ -346,10 +345,10 @@ public class UserAdapter implements UserModel {
             em.persist(credentialEntity);
             user.getCredentials().add(credentialEntity);
         } else {
-            
+
             int expiredPasswordsPolicyValue = -1;
             PasswordPolicy policy = realm.getPasswordPolicy();
-            if(policy != null) {
+            if (policy != null) {
                 expiredPasswordsPolicyValue = policy.getExpiredPasswords();
             }
 
@@ -376,7 +375,7 @@ public class UserAdapter implements UserModel {
             }
         }
     }
-    
+
     private CredentialEntity setCredentials(UserEntity user, UserCredentialModel cred) {
         CredentialEntity credentialEntity = new CredentialEntity();
         credentialEntity.setId(KeycloakModelUtils.generateId());
@@ -502,7 +501,8 @@ public class UserAdapter implements UserModel {
 
     @Override
     public void grantRole(RoleModel role) {
-        if (hasRole(role)) return;
+        if (hasRole(role))
+            return;
         UserRoleMappingEntity entity = new UserRoleMappingEntity();
         entity.setUser(getUser());
         entity.setRoleId(role.getId());
@@ -525,7 +525,6 @@ public class UserAdapter implements UserModel {
         return realmRoles;
     }
 
-
     @Override
     public Set<RoleModel> getRoleMappings() {
         // we query ids only as the role might be cached and following the @ManyToOne will result in a load
@@ -536,7 +535,8 @@ public class UserAdapter implements UserModel {
         Set<RoleModel> roles = new HashSet<RoleModel>();
         for (String roleId : ids) {
             RoleModel roleById = realm.getRoleById(roleId);
-            if (roleById == null) continue;
+            if (roleById == null)
+                continue;
             roles.add(roleById);
         }
         return roles;
@@ -544,11 +544,13 @@ public class UserAdapter implements UserModel {
 
     @Override
     public void deleteRoleMapping(RoleModel role) {
-        if (user == null || role == null) return;
+        if (user == null || role == null)
+            return;
 
         TypedQuery<UserRoleMappingEntity> query = getUserRoleMappingEntityTypedQuery(role);
         List<UserRoleMappingEntity> results = query.getResultList();
-        if (results.size() == 0) return;
+        if (results.size() == 0)
+            return;
         for (UserRoleMappingEntity entity : results) {
             em.remove(entity);
         }
@@ -563,9 +565,9 @@ public class UserAdapter implements UserModel {
         for (RoleModel role : roleMappings) {
             RoleContainerModel container = role.getContainer();
             if (container instanceof ClientModel) {
-                ClientModel appModel = (ClientModel)container;
+                ClientModel appModel = (ClientModel) container;
                 if (appModel.getId().equals(app.getId())) {
-                   roles.add(role);
+                    roles.add(role);
                 }
             }
         }
@@ -646,13 +648,13 @@ public class UserAdapter implements UserModel {
     @Override
     public boolean revokeConsentForClient(String clientId) {
         UserConsentEntity consentEntity = getGrantedConsentEntity(clientId);
-        if (consentEntity == null) return false;
+        if (consentEntity == null)
+            return false;
 
         em.remove(consentEntity);
         em.flush();
         return true;
     }
-
 
     private UserConsentEntity getGrantedConsentEntity(String clientId) {
         TypedQuery<UserConsentEntity> query = em.createNamedQuery("userConsentByUserAndClient", UserConsentEntity.class);
@@ -693,7 +695,7 @@ public class UserAdapter implements UserModel {
         if (grantedProtocolMapperEntities != null) {
             for (UserConsentProtocolMapperEntity grantedProtMapper : grantedProtocolMapperEntities) {
                 ProtocolMapperModel protocolMapper = client.getProtocolMapperById(grantedProtMapper.getProtocolMapperId());
-                model.addGrantedProtocolMapper(protocolMapper );
+                model.addGrantedProtocolMapper(protocolMapper);
             }
         }
 
@@ -751,9 +753,41 @@ public class UserAdapter implements UserModel {
     }
 
     @Override
+    public PublicKey getPublicKey() {
+        return KeycloakModelUtils.getPublicKeyFromPem(user.getPublicKey());
+    }
+
+    @Override
+    public void setPublicKey(PublicKey publicKey) {
+        user.setPublicKey(KeycloakModelUtils.getPemFromKey(publicKey));
+    }
+
+    @Override
+    public PrivateKey getPrivateKey() {
+        return KeycloakModelUtils.getPrivateKeyFromPem(user.getPrivateKey());
+    }
+
+    @Override
+    public void setPrivateKey(PrivateKey privateKey) {
+        user.setPrivateKey(KeycloakModelUtils.getPemFromKey(privateKey));
+    }
+
+    @Override
+    public X509Certificate getCertificate() {
+        return KeycloakModelUtils.getCertificateFromPem(user.getCertificate());
+    }
+
+    @Override
+    public void setCertificate(X509Certificate certificate) {
+        user.setCertificate(KeycloakModelUtils.getPemFromCertificate(certificate));
+    }
+
+    @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || !(o instanceof UserModel)) return false;
+        if (this == o)
+            return true;
+        if (o == null || !(o instanceof UserModel))
+            return false;
 
         UserModel that = (UserModel) o;
         return that.getId().equals(getId());
@@ -763,7 +797,5 @@ public class UserAdapter implements UserModel {
     public int hashCode() {
         return getId().hashCode();
     }
-
-
 
 }

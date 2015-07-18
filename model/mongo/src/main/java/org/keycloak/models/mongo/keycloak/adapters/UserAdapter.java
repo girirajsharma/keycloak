@@ -29,6 +29,9 @@ import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.models.utils.Pbkdf2PasswordEncoder;
 import org.keycloak.util.Time;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -40,12 +43,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Wrapper around UserData object, which will persist wrapped object after each set operation (compatibility with picketlink based idm)
+ * Wrapper around UserData object, which will persist wrapped object after each set operation (compatibility with picketlink
+ * based idm)
  *
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
 public class UserAdapter extends AbstractMongoAdapter<MongoUserEntity> implements UserModel {
-    
+
     private final MongoUserEntity user;
     private final RealmModel realm;
     private final KeycloakSession session;
@@ -166,7 +170,8 @@ public class UserAdapter extends AbstractMongoAdapter<MongoUserEntity> implement
 
     @Override
     public void removeAttribute(String name) {
-        if (user.getAttributes() == null) return;
+        if (user.getAttributes() == null)
+            return;
 
         user.getAttributes().remove(name);
         updateUser();
@@ -174,28 +179,29 @@ public class UserAdapter extends AbstractMongoAdapter<MongoUserEntity> implement
 
     @Override
     public String getFirstAttribute(String name) {
-        if (user.getAttributes()==null) return null;
+        if (user.getAttributes() == null)
+            return null;
 
         List<String> attrValues = user.getAttributes().get(name);
-        return (attrValues==null || attrValues.isEmpty()) ? null : attrValues.get(0);
+        return (attrValues == null || attrValues.isEmpty()) ? null : attrValues.get(0);
     }
 
     @Override
     public List<String> getAttribute(String name) {
-        if (user.getAttributes()==null) return Collections.<String>emptyList();
+        if (user.getAttributes() == null)
+            return Collections.<String> emptyList();
         List<String> attrValues = user.getAttributes().get(name);
-        return (attrValues == null) ? Collections.<String>emptyList() : Collections.unmodifiableList(attrValues);
+        return (attrValues == null) ? Collections.<String> emptyList() : Collections.unmodifiableList(attrValues);
     }
 
     @Override
     public Map<String, List<String>> getAttributes() {
-        return user.getAttributes()==null ? Collections.<String, List<String>>emptyMap() : Collections.unmodifiableMap((Map) user.getAttributes());
+        return user.getAttributes() == null ? Collections.<String, List<String>> emptyMap() : Collections.unmodifiableMap((Map) user.getAttributes());
     }
 
     public MongoUserEntity getUser() {
         return user;
     }
-
 
     @Override
     public Set<String> getRequiredActions() {
@@ -244,7 +250,7 @@ public class UserAdapter extends AbstractMongoAdapter<MongoUserEntity> implement
 
         if (cred.getType().equals(UserCredentialModel.PASSWORD)) {
             updatePasswordCredential(cred);
-        } else if (UserCredentialModel.isOtp(cred.getType())){
+        } else if (UserCredentialModel.isOtp(cred.getType())) {
             updateOtpCredential(cred);
         } else {
             CredentialEntity credentialEntity = getCredentialEntity(user, cred.getType());
@@ -282,7 +288,6 @@ public class UserAdapter extends AbstractMongoAdapter<MongoUserEntity> implement
         }
     }
 
-
     private void updatePasswordCredential(UserCredentialModel cred) {
         CredentialEntity credentialEntity = getCredentialEntity(user, cred.getType());
 
@@ -294,10 +299,10 @@ public class UserAdapter extends AbstractMongoAdapter<MongoUserEntity> implement
 
             int expiredPasswordsPolicyValue = -1;
             PasswordPolicy policy = realm.getPasswordPolicy();
-            if(policy != null) {
+            if (policy != null) {
                 expiredPasswordsPolicyValue = policy.getExpiredPasswords();
             }
-            
+
             if (expiredPasswordsPolicyValue != -1) {
                 user.getCredentials().remove(credentialEntity);
                 credentialEntity.setType(UserCredentialModel.PASSWORD_HISTORY);
@@ -320,7 +325,7 @@ public class UserAdapter extends AbstractMongoAdapter<MongoUserEntity> implement
             }
         }
     }
-    
+
     private CredentialEntity setCredentials(MongoUserEntity user, UserCredentialModel cred) {
         CredentialEntity credentialEntity = new CredentialEntity();
         credentialEntity.setType(cred.getType());
@@ -360,7 +365,7 @@ public class UserAdapter extends AbstractMongoAdapter<MongoUserEntity> implement
                 credentialEntities.add(entity);
             }
         }
-        
+
         // Avoiding direct use of credSecond.getCreatedDate() - credFirst.getCreatedDate() to prevent Integer Overflow
         // Orders from most recent to least recent
         Collections.sort(credentialEntities, new Comparator<CredentialEntity>() {
@@ -438,7 +443,6 @@ public class UserAdapter extends AbstractMongoAdapter<MongoUserEntity> implement
         credentialEntity.setDigits(credModel.getDigits());
         credentialEntity.setPeriod(credModel.getPeriod());
 
-
         getMongoStore().updateEntity(user, invocationContext);
     }
 
@@ -484,7 +488,8 @@ public class UserAdapter extends AbstractMongoAdapter<MongoUserEntity> implement
 
     @Override
     public void deleteRoleMapping(RoleModel role) {
-        if (user == null || role == null) return;
+        if (user == null || role == null)
+            return;
 
         getMongoStore().pullItemFromList(getUser(), "roleIds", role.getId(), invocationContext);
     }
@@ -541,7 +546,7 @@ public class UserAdapter extends AbstractMongoAdapter<MongoUserEntity> implement
     @Override
     public UserConsentModel getConsentByClient(String clientId) {
         UserConsentEntity consentEntity = getConsentEntityByClientId(clientId);
-        return consentEntity!=null ? toConsentModel(consentEntity) : null;
+        return consentEntity != null ? toConsentModel(consentEntity) : null;
     }
 
     @Override
@@ -549,8 +554,8 @@ public class UserAdapter extends AbstractMongoAdapter<MongoUserEntity> implement
         List<UserConsentModel> result = new ArrayList<UserConsentModel>();
 
         DBObject query = new QueryBuilder()
-                .and("userId").is(getId())
-                .get();
+            .and("userId").is(getId())
+            .get();
         List<MongoUserConsentEntity> grantedConsents = getMongoStore().loadEntities(MongoUserConsentEntity.class, query, invocationContext);
 
         for (UserConsentEntity consentEntity : grantedConsents) {
@@ -563,9 +568,9 @@ public class UserAdapter extends AbstractMongoAdapter<MongoUserEntity> implement
 
     private MongoUserConsentEntity getConsentEntityByClientId(String clientId) {
         DBObject query = new QueryBuilder()
-                .and("userId").is(getId())
-                .and("clientId").is(clientId)
-                .get();
+            .and("userId").is(getId())
+            .and("clientId").is(clientId)
+            .get();
         return getMongoStore().loadSingleEntity(MongoUserConsentEntity.class, query, invocationContext);
     }
 
@@ -628,9 +633,44 @@ public class UserAdapter extends AbstractMongoAdapter<MongoUserEntity> implement
     }
 
     @Override
+    public PublicKey getPublicKey() {
+        return KeycloakModelUtils.getPublicKeyFromPem(user.getPublicKey());
+    }
+
+    @Override
+    public void setPublicKey(PublicKey publicKey) {
+        user.setPublicKey(KeycloakModelUtils.getPemFromKey(publicKey));
+        updateUser();
+    }
+
+    @Override
+    public PrivateKey getPrivateKey() {
+        return KeycloakModelUtils.getPrivateKeyFromPem(user.getPrivateKey());
+    }
+
+    @Override
+    public void setPrivateKey(PrivateKey privateKey) {
+        user.setPrivateKey(KeycloakModelUtils.getPemFromKey(privateKey));
+        updateUser();
+    }
+
+    @Override
+    public X509Certificate getCertificate() {
+        return KeycloakModelUtils.getCertificateFromPem(user.getCertificate());
+    }
+
+    @Override
+    public void setCertificate(X509Certificate certificate) {
+        user.setCertificate(KeycloakModelUtils.getPemFromCertificate(certificate));
+        updateUser();
+    }
+
+    @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || !(o instanceof UserModel)) return false;
+        if (this == o)
+            return true;
+        if (o == null || !(o instanceof UserModel))
+            return false;
 
         UserModel that = (UserModel) o;
         return that.getId().equals(getId());

@@ -106,7 +106,7 @@ public class ClientResource {
                 new ClientManager(new RealmManager(session)).enableServiceAccount(client);;
             }
 
-            RepresentationToModel.updateClient(rep, client);
+            RepresentationToModel.updateClient(session, rep, client);
             adminEvent.operation(OperationType.UPDATE).resourcePath(uriInfo).representation(rep).success();
             return Response.noContent().build();
         } catch (ModelDuplicateException e) {

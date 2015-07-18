@@ -13,7 +13,15 @@
             "error-level": "warn"
         }
     },
-
+    
+    "keycloakCA": {
+        "provider": "${keycloak.keycloakCA.provider:jpa}"
+    },
+    
+    "pki": {
+    	"provider": "${keycloak.pki.provider:certificate}"
+    },
+    
     "realm": {
         "provider": "${keycloak.realm.provider:jpa}"
     },

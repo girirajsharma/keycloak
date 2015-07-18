@@ -38,6 +38,9 @@ import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.models.utils.Pbkdf2PasswordEncoder;
 import org.keycloak.util.Time;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -46,8 +49,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static org.keycloak.models.utils.Pbkdf2PasswordEncoder.getSalt;
 
 /**
  * UserModel for JSON persistence.
@@ -94,7 +95,8 @@ public class UserAdapter implements UserModel, Comparable {
             return;
         }
 
-        if (getUsername().equals(username)) return; // allow setting to same name
+        if (getUsername().equals(username))
+            return; // allow setting to same name
 
         if (inMemoryModel.hasUserWithUsername(realm.getId(), username))
             throw new ModelDuplicateException("User with username " + username + " already exists in realm.");
@@ -155,10 +157,12 @@ public class UserAdapter implements UserModel, Comparable {
             return;
         }
 
-        if (email.equals(getEmail())) return;
+        if (email.equals(getEmail()))
+            return;
 
-        RealmAdapter realmAdapter = (RealmAdapter)realm;
-        if (realmAdapter.hasUserWithEmail(email)) throw new ModelDuplicateException("User with email address " + email + " already exists.");
+        RealmAdapter realmAdapter = (RealmAdapter) realm;
+        if (realmAdapter.hasUserWithEmail(email))
+            throw new ModelDuplicateException("User with email address " + email + " already exists.");
         user.setEmail(email);
     }
 
@@ -194,35 +198,39 @@ public class UserAdapter implements UserModel, Comparable {
 
     @Override
     public void removeAttribute(String name) {
-        if (user.getAttributes() == null) return;
+        if (user.getAttributes() == null)
+            return;
 
         user.getAttributes().remove(name);
     }
 
     @Override
     public String getFirstAttribute(String name) {
-        if (user.getAttributes()==null) return null;
+        if (user.getAttributes() == null)
+            return null;
 
         List<String> attrValues = user.getAttributes().get(name);
-        return (attrValues==null || attrValues.isEmpty()) ? null : attrValues.get(0);
+        return (attrValues == null || attrValues.isEmpty()) ? null : attrValues.get(0);
     }
 
     @Override
     public List<String> getAttribute(String name) {
-        if (user.getAttributes()==null) return Collections.<String>emptyList();
+        if (user.getAttributes() == null)
+            return Collections.<String> emptyList();
         List<String> attrValues = user.getAttributes().get(name);
-        return (attrValues == null) ? Collections.<String>emptyList() : Collections.unmodifiableList(attrValues);
+        return (attrValues == null) ? Collections.<String> emptyList() : Collections.unmodifiableList(attrValues);
     }
 
     @Override
     public Map<String, List<String>> getAttributes() {
-        return user.getAttributes()==null ? Collections.<String, List<String>>emptyMap() : Collections.unmodifiableMap((Map)user.getAttributes());
+        return user.getAttributes() == null ? Collections.<String, List<String>> emptyMap() : Collections.unmodifiableMap((Map) user.getAttributes());
     }
 
     @Override
     public Set<String> getRequiredActions() {
         List<String> requiredActions = user.getRequiredActions();
-        if (requiredActions == null) requiredActions = new ArrayList<String>();
+        if (requiredActions == null)
+            requiredActions = new ArrayList<String>();
         return new HashSet(requiredActions);
     }
 
@@ -235,7 +243,8 @@ public class UserAdapter implements UserModel, Comparable {
     @Override
     public void addRequiredAction(String actionName) {
         List<String> requiredActions = user.getRequiredActions();
-        if (requiredActions == null) requiredActions = new ArrayList<>();
+        if (requiredActions == null)
+            requiredActions = new ArrayList<>();
         if (!requiredActions.contains(actionName)) {
             requiredActions.add(actionName);
         }
@@ -251,7 +260,8 @@ public class UserAdapter implements UserModel, Comparable {
     @Override
     public void removeRequiredAction(String actionName) {
         List<String> requiredActions = user.getRequiredActions();
-        if (requiredActions == null) return;
+        if (requiredActions == null)
+            return;
         requiredActions.remove(actionName);
         user.setRequiredActions(requiredActions);
     }
@@ -271,10 +281,10 @@ public class UserAdapter implements UserModel, Comparable {
 
         if (cred.getType().equals(UserCredentialModel.PASSWORD)) {
             updatePasswordCredential(cred);
-        } else if (UserCredentialModel.isOtp(cred.getType())){
+        } else if (UserCredentialModel.isOtp(cred.getType())) {
             updateOtpCredential(cred);
 
-        }else {
+        } else {
             CredentialEntity credentialEntity = getCredentialEntity(user, cred.getType());
 
             if (credentialEntity == null) {
@@ -309,7 +319,6 @@ public class UserAdapter implements UserModel, Comparable {
         }
     }
 
-
     private void updatePasswordCredential(UserCredentialModel cred) {
         CredentialEntity credentialEntity = getCredentialEntity(user, cred.getType());
 
@@ -321,10 +330,10 @@ public class UserAdapter implements UserModel, Comparable {
 
             int expiredPasswordsPolicyValue = -1;
             PasswordPolicy policy = realm.getPasswordPolicy();
-            if(policy != null) {
+            if (policy != null) {
                 expiredPasswordsPolicyValue = policy.getExpiredPasswords();
             }
-            
+
             if (expiredPasswordsPolicyValue != -1) {
                 user.getCredentials().remove(credentialEntity);
                 credentialEntity.setType(UserCredentialModel.PASSWORD_HISTORY);
@@ -347,7 +356,7 @@ public class UserAdapter implements UserModel, Comparable {
             }
         }
     }
-    
+
     private CredentialEntity setCredentials(UserEntity user, UserCredentialModel cred) {
         CredentialEntity credentialEntity = new CredentialEntity();
         credentialEntity.setType(cred.getType());
@@ -387,7 +396,7 @@ public class UserAdapter implements UserModel, Comparable {
                 credentialEntities.add(entity);
             }
         }
-        
+
         // Avoiding direct use of credSecond.getCreatedDate() - credFirst.getCreatedDate() to prevent Integer Overflow
         // Orders from most recent to least recent
         Collections.sort(credentialEntities, new Comparator<CredentialEntity>() {
@@ -452,9 +461,9 @@ public class UserAdapter implements UserModel, Comparable {
 
         if (credentialEntity == null) {
             credentialEntity = new CredentialEntity();
-        //    credentialEntity.setId(KeycloakModelUtils.generateId());
+            // credentialEntity.setId(KeycloakModelUtils.generateId());
             credentialEntity.setType(credModel.getType());
-        //    credentialEntity.setUser(user);
+            // credentialEntity.setUser(user);
             credModel.setCreatedDate(credModel.getCreatedDate());
             user.getCredentials().add(credentialEntity);
         }
@@ -489,7 +498,8 @@ public class UserAdapter implements UserModel, Comparable {
     public Set<RoleModel> getRealmRoleMappings() {
         Set<RoleModel> allRoleMappings = getRoleMappings();
 
-        // Filter to retrieve just realm roles TODO: Maybe improve to avoid filter programmatically... Maybe have separate fields for realmRoles and appRoles on user?
+        // Filter to retrieve just realm roles TODO: Maybe improve to avoid filter programmatically... Maybe have separate
+        // fields for realmRoles and appRoles on user?
         Set<RoleModel> realmRoles = new HashSet<RoleModel>();
         for (RoleModel role : allRoleMappings) {
             RoleEntity roleEntity = ((RoleAdapter) role).getRoleEntity();
@@ -503,7 +513,8 @@ public class UserAdapter implements UserModel, Comparable {
 
     @Override
     public void deleteRoleMapping(RoleModel role) {
-        if (user == null || role == null) return;
+        if (user == null || role == null)
+            return;
         allRoles.remove(role);
     }
 
@@ -512,7 +523,7 @@ public class UserAdapter implements UserModel, Comparable {
         Set<RoleModel> result = new HashSet<RoleModel>();
 
         for (RoleModel role : allRoles) {
-            RoleEntity roleEntity = ((RoleAdapter)role).getRoleEntity();
+            RoleEntity roleEntity = ((RoleAdapter) role).getRoleEntity();
             if (app.getId().equals(roleEntity.getClientId())) {
                 result.add(new RoleAdapter(realm, roleEntity, app));
             }
@@ -570,8 +581,10 @@ public class UserAdapter implements UserModel, Comparable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || !(o instanceof UserModel)) return false;
+        if (this == o)
+            return true;
+        if (o == null || !(o instanceof UserModel))
+            return false;
 
         UserModel that = (UserModel) o;
         return that.getId().equals(getId());
@@ -584,7 +597,41 @@ public class UserAdapter implements UserModel, Comparable {
 
     @Override
     public int compareTo(Object user) {
-        if (this == user) return 0;
-        return (getUsername().compareTo(((UserModel)user).getUsername()));
+        if (this == user)
+            return 0;
+        return (getUsername().compareTo(((UserModel) user).getUsername()));
     }
+
+    @Override
+    public PublicKey getPublicKey() {
+        return KeycloakModelUtils.getPublicKeyFromPem(user.getPublicKey());
+    }
+
+    @Override
+    public void setPublicKey(PublicKey publicKey) {
+        user.setPublicKey(KeycloakModelUtils.getPemFromKey(publicKey));
+
+    }
+
+    @Override
+    public PrivateKey getPrivateKey() {
+        return KeycloakModelUtils.getPrivateKeyFromPem(user.getPrivateKey());
+    }
+
+    @Override
+    public void setPrivateKey(PrivateKey privateKey) {
+        user.setPrivateKey(KeycloakModelUtils.getPemFromKey(privateKey));
+
+    }
+
+    @Override
+    public X509Certificate getCertificate() {
+        return KeycloakModelUtils.getCertificateFromPem(user.getCertificate());
+    }
+
+    @Override
+    public void setCertificate(X509Certificate certificate) {
+        user.setCertificate(KeycloakModelUtils.getPemFromCertificate(certificate));
+    }
+
 }

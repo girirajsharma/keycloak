@@ -4,8 +4,14 @@ import org.keycloak.models.*;
 import org.keycloak.models.cache.CacheRealmProvider;
 import org.keycloak.models.cache.RealmCache;
 import org.keycloak.models.cache.entities.CachedClient;
-
-import java.util.*;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -30,23 +36,27 @@ public class ClientAdapter implements ClientModel {
         if (updated == null) {
             cacheSession.registerApplicationInvalidation(getId());
             updated = updated = cacheSession.getDelegate().getClientById(getId(), cachedRealm);
-            if (updated == null) throw new IllegalStateException("Not found in database");
+            if (updated == null)
+                throw new IllegalStateException("Not found in database");
         }
     }
 
     @Override
     public void updateClient() {
-        if (updated != null) updated.updateClient();
+        if (updated != null)
+            updated.updateClient();
     }
 
     @Override
     public String getId() {
-        if (updated != null) return updated.getId();
+        if (updated != null)
+            return updated.getId();
         return cached.getId();
     }
 
     public Set<String> getWebOrigins() {
-        if (updated != null) return updated.getWebOrigins();
+        if (updated != null)
+            return updated.getWebOrigins();
         return cached.getWebOrigins();
     }
 
@@ -66,7 +76,8 @@ public class ClientAdapter implements ClientModel {
     }
 
     public Set<String> getRedirectUris() {
-        if (updated != null) return updated.getRedirectUris();
+        if (updated != null)
+            return updated.getRedirectUris();
         return cached.getRedirectUris();
     }
 
@@ -86,7 +97,8 @@ public class ClientAdapter implements ClientModel {
     }
 
     public boolean isEnabled() {
-        if (updated != null) return updated.isEnabled();
+        if (updated != null)
+            return updated.isEnabled();
         return cached.isEnabled();
     }
 
@@ -100,7 +112,8 @@ public class ClientAdapter implements ClientModel {
     }
 
     public String getSecret() {
-        if (updated != null) return updated.getSecret();
+        if (updated != null)
+            return updated.getSecret();
         return cached.getSecret();
     }
 
@@ -110,7 +123,8 @@ public class ClientAdapter implements ClientModel {
     }
 
     public boolean isPublicClient() {
-        if (updated != null) return updated.isPublicClient();
+        if (updated != null)
+            return updated.isPublicClient();
         return cached.isPublicClient();
     }
 
@@ -120,7 +134,8 @@ public class ClientAdapter implements ClientModel {
     }
 
     public boolean isFrontchannelLogout() {
-        if (updated != null) return updated.isPublicClient();
+        if (updated != null)
+            return updated.isPublicClient();
         return cached.isFrontchannelLogout();
     }
 
@@ -131,7 +146,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public boolean isFullScopeAllowed() {
-        if (updated != null) return updated.isFullScopeAllowed();
+        if (updated != null)
+            return updated.isFullScopeAllowed();
         return cached.isFullScopeAllowed();
     }
 
@@ -143,7 +159,8 @@ public class ClientAdapter implements ClientModel {
     }
 
     public boolean isDirectGrantsOnly() {
-        if (updated != null) return updated.isDirectGrantsOnly();
+        if (updated != null)
+            return updated.isDirectGrantsOnly();
         return cached.isDirectGrantsOnly();
     }
 
@@ -153,7 +170,8 @@ public class ClientAdapter implements ClientModel {
     }
 
     public Set<RoleModel> getScopeMappings() {
-        if (updated != null) return updated.getScopeMappings();
+        if (updated != null)
+            return updated.getScopeMappings();
         Set<RoleModel> roles = new HashSet<RoleModel>();
         for (String id : cached.getScope()) {
             roles.add(cacheSession.getRoleById(id, getRealm()));
@@ -193,7 +211,8 @@ public class ClientAdapter implements ClientModel {
     }
 
     public int getNotBefore() {
-        if (updated != null) return updated.getNotBefore();
+        if (updated != null)
+            return updated.getNotBefore();
         return cached.getNotBefore();
     }
 
@@ -204,7 +223,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public String getProtocol() {
-        if (updated != null) return updated.getProtocol();
+        if (updated != null)
+            return updated.getProtocol();
         return cached.getProtocol();
     }
 
@@ -230,13 +250,15 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public String getAttribute(String name) {
-        if (updated != null) return updated.getAttribute(name);
+        if (updated != null)
+            return updated.getAttribute(name);
         return cached.getAttributes().get(name);
     }
 
     @Override
     public Map<String, String> getAttributes() {
-        if (updated != null) return updated.getAttributes();
+        if (updated != null)
+            return updated.getAttributes();
         Map<String, String> copy = new HashMap<String, String>();
         copy.putAll(cached.getAttributes());
         return copy;
@@ -244,7 +266,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public Set<ProtocolMapperModel> getProtocolMappers() {
-        if (updated != null) return updated.getProtocolMappers();
+        if (updated != null)
+            return updated.getProtocolMappers();
         return cached.getProtocolMappers();
     }
 
@@ -271,7 +294,8 @@ public class ClientAdapter implements ClientModel {
     @Override
     public ProtocolMapperModel getProtocolMapperById(String id) {
         for (ProtocolMapperModel mapping : cached.getProtocolMappers()) {
-            if (mapping.getId().equals(id)) return mapping;
+            if (mapping.getId().equals(id))
+                return mapping;
         }
         return null;
     }
@@ -279,14 +303,16 @@ public class ClientAdapter implements ClientModel {
     @Override
     public ProtocolMapperModel getProtocolMapperByName(String protocol, String name) {
         for (ProtocolMapperModel mapping : cached.getProtocolMappers()) {
-            if (mapping.getProtocol().equals(protocol) && mapping.getName().equals(name)) return mapping;
+            if (mapping.getProtocol().equals(protocol) && mapping.getName().equals(name))
+                return mapping;
         }
         return null;
     }
 
     @Override
     public String getClientId() {
-        if (updated != null) return updated.getClientId();
+        if (updated != null)
+            return updated.getClientId();
         return cached.getClientId();
     }
 
@@ -299,7 +325,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public String getName() {
-        if (updated != null) return updated.getName();
+        if (updated != null)
+            return updated.getName();
         return cached.getName();
     }
 
@@ -311,7 +338,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public boolean isSurrogateAuthRequired() {
-        if (updated != null) return updated.isSurrogateAuthRequired();
+        if (updated != null)
+            return updated.isSurrogateAuthRequired();
         return cached.isSurrogateAuthRequired();
     }
 
@@ -323,7 +351,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public String getManagementUrl() {
-        if (updated != null) return updated.getManagementUrl();
+        if (updated != null)
+            return updated.getManagementUrl();
         return cached.getManagementUrl();
     }
 
@@ -335,7 +364,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public String getBaseUrl() {
-        if (updated != null) return updated.getBaseUrl();
+        if (updated != null)
+            return updated.getBaseUrl();
         return cached.getBaseUrl();
     }
 
@@ -347,7 +377,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public List<String> getDefaultRoles() {
-        if (updated != null) return updated.getDefaultRoles();
+        if (updated != null)
+            return updated.getDefaultRoles();
         return cached.getDefaultRoles();
     }
 
@@ -372,7 +403,7 @@ public class ClientAdapter implements ClientModel {
             RoleContainerModel container = role.getContainer();
             if (container instanceof RealmModel) {
             } else {
-                ClientModel app = (ClientModel)container;
+                ClientModel app = (ClientModel) container;
                 if (app.getId().equals(getId())) {
                     appRoles.add(role);
                 }
@@ -384,7 +415,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public boolean isBearerOnly() {
-        if (updated != null) return updated.isBearerOnly();
+        if (updated != null)
+            return updated.isBearerOnly();
         return cached.isBearerOnly();
     }
 
@@ -396,7 +428,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public boolean isConsentRequired() {
-        if (updated != null) return updated.isConsentRequired();
+        if (updated != null)
+            return updated.isConsentRequired();
         return cached.isConsentRequired();
     }
 
@@ -408,7 +441,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public boolean isServiceAccountsEnabled() {
-        if (updated != null) return updated.isServiceAccountsEnabled();
+        if (updated != null)
+            return updated.isServiceAccountsEnabled();
         return cached.isServiceAccountsEnabled();
     }
 
@@ -420,9 +454,11 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public RoleModel getRole(String name) {
-        if (updated != null) return updated.getRole(name);
+        if (updated != null)
+            return updated.getRole(name);
         String id = cached.getRoles().get(name);
-        if (id == null) return null;
+        if (id == null)
+            return null;
         return cacheSession.getRoleById(id, cachedRealm);
     }
 
@@ -437,7 +473,7 @@ public class ClientAdapter implements ClientModel {
     @Override
     public RoleModel addRole(String id, String name) {
         getDelegateForUpdate();
-        RoleModel role =  updated.addRole(id, name);
+        RoleModel role = updated.addRole(id, name);
         cacheSession.registerRoleInvalidation(role.getId());
         return role;
     }
@@ -451,12 +487,14 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public Set<RoleModel> getRoles() {
-        if (updated != null) return updated.getRoles();
+        if (updated != null)
+            return updated.getRoles();
 
         Set<RoleModel> roles = new HashSet<RoleModel>();
         for (String id : cached.getRoles().values()) {
             RoleModel roleById = cacheSession.getRoleById(id, cachedRealm);
-            if (roleById == null) continue;
+            if (roleById == null)
+                continue;
             roles.add(roleById);
         }
         return roles;
@@ -464,7 +502,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public int getNodeReRegistrationTimeout() {
-        if (updated != null) return updated.getNodeReRegistrationTimeout();
+        if (updated != null)
+            return updated.getNodeReRegistrationTimeout();
         return cached.getNodeReRegistrationTimeout();
     }
 
@@ -476,7 +515,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public Map<String, Integer> getRegisteredNodes() {
-        if (updated != null) return updated.getRegisteredNodes();
+        if (updated != null)
+            return updated.getRegisteredNodes();
         return cached.getRegisteredNodes();
     }
 
@@ -494,28 +534,74 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public boolean hasScope(RoleModel role) {
-        if (updated != null) return updated.hasScope(role);
-        if (cached.isFullScopeAllowed() || cached.getScope().contains(role.getId())) return true;
+        if (updated != null)
+            return updated.hasScope(role);
+        if (cached.isFullScopeAllowed() || cached.getScope().contains(role.getId()))
+            return true;
 
         Set<RoleModel> roles = getScopeMappings();
 
         for (RoleModel mapping : roles) {
-            if (mapping.hasRole(role)) return true;
+            if (mapping.hasRole(role))
+                return true;
         }
 
         roles = getRoles();
-        if (roles.contains(role)) return true;
+        if (roles.contains(role))
+            return true;
 
         for (RoleModel mapping : roles) {
-            if (mapping.hasRole(role)) return true;
+            if (mapping.hasRole(role))
+                return true;
         }
         return false;
     }
 
     @Override
+    public PublicKey getPublicKey() {
+        if (updated != null)
+            return updated.getPublicKey();
+        return cached.getPublicKey();
+    }
+
+    @Override
+    public void setPublicKey(PublicKey publicKey) {
+        getDelegateForUpdate();
+        updated.setPublicKey(publicKey);
+    }
+
+    @Override
+    public PrivateKey getPrivateKey() {
+        if (updated != null)
+            return updated.getPrivateKey();
+        return cached.getPrivateKey();
+    }
+
+    @Override
+    public void setPrivateKey(PrivateKey privateKey) {
+        getDelegateForUpdate();
+        updated.setPrivateKey(privateKey);
+    }
+
+    @Override
+    public X509Certificate getCertificate() {
+        if (updated != null)
+            return updated.getCertificate();
+        return cached.getCertificate();
+    }
+
+    @Override
+    public void setCertificate(X509Certificate certificate) {
+        getDelegateForUpdate();
+        updated.setCertificate(certificate);
+    }
+
+    @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || !(o instanceof ClientModel)) return false;
+        if (this == o)
+            return true;
+        if (o == null || !(o instanceof ClientModel))
+            return false;
 
         ClientModel that = (ClientModel) o;
         return that.getId().equals(getId());

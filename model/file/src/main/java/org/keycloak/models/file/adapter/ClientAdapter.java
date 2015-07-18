@@ -29,6 +29,9 @@ import org.keycloak.models.entities.ProtocolMapperEntity;
 import org.keycloak.models.entities.RoleEntity;
 import org.keycloak.models.utils.KeycloakModelUtils;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,7 +48,7 @@ import java.util.Set;
 public class ClientAdapter implements ClientModel {
 
     private final RealmModel realm;
-    private  KeycloakSession session;
+    private KeycloakSession session;
     private final ClientEntity entity;
     private final InMemoryModel inMemoryModel;
 
@@ -75,7 +78,7 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public void setName(String name) {
-       entity.setName(name);
+        entity.setName(name);
     }
 
     @Override
@@ -126,7 +129,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public void addRedirectUri(String redirectUri) {
-        if (entity.getRedirectUris().contains(redirectUri)) return;
+        if (entity.getRedirectUris().contains(redirectUri))
+            return;
         entity.getRedirectUris().add(redirectUri);
     }
 
@@ -169,7 +173,6 @@ public class ClientAdapter implements ClientModel {
     public void setPublicClient(boolean flag) {
         entity.setPublicClient(flag);
     }
-
 
     @Override
     public boolean isFrontchannelLogout() {
@@ -217,7 +220,7 @@ public class ClientAdapter implements ClientModel {
 
         Set<RoleModel> realmRoles = new HashSet<RoleModel>();
         for (RoleModel role : allScopes) {
-            RoleAdapter roleAdapter = (RoleAdapter)role;
+            RoleAdapter roleAdapter = (RoleAdapter) role;
             if (roleAdapter.isRealmRole()) {
                 realmRoles.add(role);
             }
@@ -274,7 +277,8 @@ public class ClientAdapter implements ClientModel {
         Set<ProtocolMapperModel> result = new HashSet<ProtocolMapperModel>();
         for (ProtocolMapperEntity entity : this.entity.getProtocolMappers()) {
             ProtocolMapperModel model = getProtocolMapperById(entity.getId());
-            if (model != null) result.add(model);
+            if (model != null)
+                result.add(model);
         }
         return result;
     }
@@ -346,14 +350,16 @@ public class ClientAdapter implements ClientModel {
     @Override
     public ProtocolMapperModel getProtocolMapperById(String id) {
         ProtocolMapperEntity entity = getProtocolMapperEntityById(id);
-        if (entity == null) return null;
+        if (entity == null)
+            return null;
         return entityToModel(entity);
     }
 
     @Override
     public ProtocolMapperModel getProtocolMapperByName(String protocol, String name) {
         ProtocolMapperEntity entity = getProtocolMapperEntityByName(protocol, name);
-        if (entity == null) return null;
+        if (entity == null)
+            return null;
         return entityToModel(entity);
     }
 
@@ -366,7 +372,8 @@ public class ClientAdapter implements ClientModel {
         mapping.setConsentRequired(entity.isConsentRequired());
         mapping.setConsentText(entity.getConsentText());
         Map<String, String> config = new HashMap<String, String>();
-        if (entity.getConfig() != null) config.putAll(entity.getConfig());
+        if (entity.getConfig() != null)
+            config.putAll(entity.getConfig());
         mapping.setConfig(config);
         return mapping;
     }
@@ -378,14 +385,17 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public void setClientId(String clientId) {
-        if (appNameExists(clientId)) throw new ModelDuplicateException("Application named " + clientId + " already exists.");
+        if (appNameExists(clientId))
+            throw new ModelDuplicateException("Application named " + clientId + " already exists.");
         entity.setClientId(clientId);
     }
 
     private boolean appNameExists(String name) {
         for (ClientModel app : realm.getClients()) {
-            if (app == this) continue;
-            if (app.getClientId().equals(name)) return true;
+            if (app == this)
+                continue;
+            if (app.getClientId().equals(name))
+                return true;
         }
 
         return false;
@@ -464,7 +474,8 @@ public class ClientAdapter implements ClientModel {
     @Override
     public RoleAdapter getRole(String name) {
         for (RoleAdapter role : allRoles.values()) {
-            if (role.getName().equals(name)) return role;
+            if (role.getName().equals(name))
+                return role;
         }
         return null;
     }
@@ -476,7 +487,8 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public RoleAdapter addRole(String id, String name) {
-        if (roleNameExists(name)) throw new ModelDuplicateException("Role named " + name + " already exists.");
+        if (roleNameExists(name))
+            throw new ModelDuplicateException("Role named " + name + " already exists.");
         RoleEntity roleEntity = new RoleEntity();
         roleEntity.setId(id);
         roleEntity.setName(name);
@@ -490,7 +502,8 @@ public class ClientAdapter implements ClientModel {
 
     private boolean roleNameExists(String name) {
         for (RoleModel role : allRoles.values()) {
-            if (role.getName().equals(name)) return true;
+            if (role.getName().equals(name))
+                return true;
         }
 
         return false;
@@ -525,18 +538,23 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public boolean hasScope(RoleModel role) {
-        if (isFullScopeAllowed()) return true;
+        if (isFullScopeAllowed())
+            return true;
         Set<RoleModel> roles = getScopeMappings();
-        if (roles.contains(role)) return true;
+        if (roles.contains(role))
+            return true;
 
         for (RoleModel mapping : roles) {
-            if (mapping.hasRole(role)) return true;
+            if (mapping.hasRole(role))
+                return true;
         }
         roles = getRoles();
-        if (roles.contains(role)) return true;
+        if (roles.contains(role))
+            return true;
 
         for (RoleModel mapping : roles) {
-            if (mapping.hasRole(role)) return true;
+            if (mapping.hasRole(role))
+                return true;
         }
         return false;
     }
@@ -547,7 +565,7 @@ public class ClientAdapter implements ClientModel {
 
         Set<RoleModel> appRoles = new HashSet<RoleModel>();
         for (RoleModel role : allScopes) {
-            RoleAdapter roleAdapter = (RoleAdapter)role;
+            RoleAdapter roleAdapter = (RoleAdapter) role;
             if (getId().equals(roleAdapter.getRoleEntity().getClientId())) {
                 appRoles.add(role);
             }
@@ -568,7 +586,8 @@ public class ClientAdapter implements ClientModel {
         }
 
         List<String> defaultRoles = getDefaultRoles();
-        if (defaultRoles.contains(name)) return;
+        if (defaultRoles.contains(name))
+            return;
 
         String[] defaultRoleNames = defaultRoles.toArray(new String[defaultRoles.size() + 1]);
         defaultRoleNames[defaultRoleNames.length - 1] = name;
@@ -602,7 +621,7 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public Map<String, Integer> getRegisteredNodes() {
-        return entity.getRegisteredNodes() == null ? Collections.<String, Integer>emptyMap() : Collections.unmodifiableMap(entity.getRegisteredNodes());
+        return entity.getRegisteredNodes() == null ? Collections.<String, Integer> emptyMap() : Collections.unmodifiableMap(entity.getRegisteredNodes());
     }
 
     @Override
@@ -616,15 +635,50 @@ public class ClientAdapter implements ClientModel {
 
     @Override
     public void unregisterNode(String nodeHost) {
-        if (entity.getRegisteredNodes() == null) return;
+        if (entity.getRegisteredNodes() == null)
+            return;
 
         entity.getRegisteredNodes().remove(nodeHost);
     }
 
     @Override
+    public PublicKey getPublicKey() {
+        return KeycloakModelUtils.getPublicKeyFromPem(entity.getPublicKey());
+    }
+
+    @Override
+    public void setPublicKey(PublicKey publicKey) {
+        entity.setPublicKey(KeycloakModelUtils.getPemFromKey(publicKey));
+
+    }
+
+    @Override
+    public PrivateKey getPrivateKey() {
+        return KeycloakModelUtils.getPrivateKeyFromPem(entity.getPrivateKey());
+    }
+
+    @Override
+    public void setPrivateKey(PrivateKey privateKey) {
+        entity.setPrivateKey(KeycloakModelUtils.getPemFromKey(privateKey));
+
+    }
+
+    @Override
+    public X509Certificate getCertificate() {
+        return KeycloakModelUtils.getCertificateFromPem(entity.getCertificate());
+    }
+
+    @Override
+    public void setCertificate(X509Certificate certificate) {
+        entity.setCertificate(KeycloakModelUtils.getPemFromCertificate(certificate));
+    }
+
+    @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || !(o instanceof ClientModel)) return false;
+        if (this == o)
+            return true;
+        if (o == null || !(o instanceof ClientModel))
+            return false;
 
         ClientModel that = (ClientModel) o;
         return that.getId().equals(getId());

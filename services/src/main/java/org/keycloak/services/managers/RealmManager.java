@@ -80,7 +80,8 @@ public class RealmManager {
     }
 
     public RealmModel createRealm(String id, String name) {
-        if (id == null) id = KeycloakModelUtils.generateId();
+        if (id == null)
+            id = KeycloakModelUtils.generateId();
         RealmModel realm = model.createRealm(id, name);
         realm.setName(name);
 
@@ -100,16 +101,19 @@ public class RealmManager {
     }
 
     protected void setupAuthenticationFlows(RealmModel realm) {
-        if (realm.getAuthenticationFlows().size() == 0) DefaultAuthenticationFlows.addFlows(realm);
+        if (realm.getAuthenticationFlows().size() == 0)
+            DefaultAuthenticationFlows.addFlows(realm);
     }
 
     protected void setupRequiredActions(RealmModel realm) {
-        if (realm.getRequiredActionProviders().size() == 0) DefaultRequiredActions.addActions(realm);
+        if (realm.getRequiredActionProviders().size() == 0)
+            DefaultRequiredActions.addActions(realm);
     }
 
     protected void setupAdminConsole(RealmModel realm) {
         ClientModel adminConsole = realm.getClientByClientId(Constants.ADMIN_CONSOLE_CLIENT_ID);
-        if (adminConsole == null) adminConsole = new ClientManager(this).createClient(realm, Constants.ADMIN_CONSOLE_CLIENT_ID);
+        if (adminConsole == null)
+            adminConsole = new ClientManager(this).createClient(realm, Constants.ADMIN_CONSOLE_CLIENT_ID);
         adminConsole.setName("${client_" + Constants.ADMIN_CONSOLE_CLIENT_ID + "}");
         String baseUrl = contextPath + "/admin/" + realm.getName() + "/console";
         adminConsole.setBaseUrl(baseUrl + "/index.html");
@@ -136,8 +140,6 @@ public class RealmManager {
     public String getRealmAdminClientId(RealmRepresentation realm) {
         return Constants.REALM_MANAGEMENT_CLIENT_ID;
     }
-
-
 
     protected void setupRealmDefaults(RealmModel realm) {
         realm.setBrowserSecurityHeaders(BrowserSecurityHeaders.defaultHeaders);
@@ -183,10 +185,10 @@ public class RealmManager {
         if (rep.getEventsListeners() != null) {
             realm.setEventsListeners(new HashSet<String>(rep.getEventsListeners()));
         }
-        if(rep.getEnabledEventTypes() != null) {
+        if (rep.getEnabledEventTypes() != null) {
             realm.setEnabledEventTypes(new HashSet<String>(rep.getEnabledEventTypes()));
         }
-        
+
         realm.setAdminEventsEnabled(rep.isAdminEventsEnabled());
         realm.setAdminEventsDetailsEnabled(rep.isAdminEventsDetailsEnabled());
     }
@@ -197,7 +199,9 @@ public class RealmManager {
     }
 
     private void setupRealmAdminManagement(RealmModel realm) {
-        if (realm.getName().equals(Config.getAdminRealm())) { return; } // don't need to do this for master realm
+        if (realm.getName().equals(Config.getAdminRealm())) {
+            return;
+        } // don't need to do this for master realm
 
         ClientManager clientManager = new ClientManager(new RealmManager(session));
 
@@ -214,11 +218,10 @@ public class RealmManager {
 
         for (String r : AdminRoles.ALL_REALM_ROLES) {
             RoleModel role = realmAdminClient.addRole(r);
-            role.setDescription("${role_"+r+"}");
+            role.setDescription("${role_" + r + "}");
             adminRole.addCompositeRole(role);
         }
     }
-
 
     private void setupAccountManagement(RealmModel realm) {
         ClientModel client = realm.getClientNameMap().get(Constants.ACCOUNT_MANAGEMENT_CLIENT_ID);
@@ -234,7 +237,7 @@ public class RealmManager {
 
             for (String role : AccountRoles.ALL) {
                 client.addDefaultRole(role);
-                client.getRole(role).setDescription("${role_"+role+"}");
+                client.getRole(role).setDescription("${role_" + role + "}");
             }
         }
     }
@@ -252,7 +255,7 @@ public class RealmManager {
             client.setFullScopeAllowed(false);
 
             for (String role : Constants.BROKER_SERVICE_ROLES) {
-                client.addRole(role).setDescription("${role_"+ role.toLowerCase().replaceAll("_", "-") +"}");
+                client.addRole(role).setDescription("${role_" + role.toLowerCase().replaceAll("_", "-") + "}");
             }
         }
     }
@@ -269,8 +272,10 @@ public class RealmManager {
 
         setupRealmDefaults(realm);
         setupMasterAdminManagement(realm);
-        if (!hasRealmAdminManagementClient(rep)) setupRealmAdminManagement(realm);
-        if (!hasAccountManagementClient(rep)) setupAccountManagement(realm);
+        if (!hasRealmAdminManagementClient(rep))
+            setupRealmAdminManagement(realm);
+        if (!hasAccountManagementClient(rep))
+            setupAccountManagement(realm);
 
         boolean postponeImpersonationSetup = false;
         if (!hasImpersonationServiceClient(rep)) {
@@ -281,12 +286,15 @@ public class RealmManager {
             }
         }
 
-        if (!hasBrokerClient(rep)) setupBrokerService(realm);
-        if (!hasAdminConsoleClient(rep)) setupAdminConsole(realm);
+        if (!hasBrokerClient(rep))
+            setupBrokerService(realm);
+        if (!hasAdminConsoleClient(rep))
+            setupAdminConsole(realm);
 
         RepresentationToModel.importRealm(session, rep, realm);
 
-        // Could happen when migrating from older version and I have exported JSON file, which contains "realm-management" client but not "impersonation" client
+        // Could happen when migrating from older version and I have exported JSON file, which contains "realm-management"
+        // client but not "impersonation" client
         // I need to postpone impersonation because it needs "realm-management" client and it's roles set
         if (postponeImpersonationSetup) {
             setupImpersonationService(realm);
@@ -312,9 +320,11 @@ public class RealmManager {
     private boolean hasAccountManagementClient(RealmRepresentation rep) {
         return hasClient(rep, Constants.ACCOUNT_MANAGEMENT_CLIENT_ID);
     }
+
     private boolean hasImpersonationServiceClient(RealmRepresentation rep) {
         return hasClient(rep, Constants.IMPERSONATION_SERVICE_CLIENT_ID);
     }
+
     private boolean hasBrokerClient(RealmRepresentation rep) {
         return hasClient(rep, Constants.BROKER_SERVICE_CLIENT_ID);
     }
@@ -354,9 +364,7 @@ public class RealmManager {
     /**
      * Query users based on a search string:
      * <p/>
-     * "Bill Burke" first and last name
-     * "bburke@redhat.com" email
-     * "Burke" lastname or username
+     * "Bill Burke" first and last name "bburke@redhat.com" email "Burke" lastname or username
      *
      * @param searchString
      * @param realmModel

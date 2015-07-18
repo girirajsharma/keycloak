@@ -33,6 +33,10 @@ public class ClientRepresentation {
     protected Map<String, Integer> registeredNodes;
     protected List<ProtocolMapperRepresentation> protocolMappers;
 
+    protected String publicKey;
+    protected String privateKey;
+    protected String certificate;
+
     public String getId() {
         return id;
     }
@@ -223,5 +227,29 @@ public class ClientRepresentation {
 
     public void setProtocolMappers(List<ProtocolMapperRepresentation> protocolMappers) {
         this.protocolMappers = protocolMappers;
+    }
+
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+    }
+
+    public String getCertificate() {
+        return certificate;
+    }
+
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
     }
 }

@@ -5,6 +5,7 @@ import org.jboss.resteasy.annotations.cache.NoCache;
 import org.jboss.resteasy.spi.BadRequestException;
 import org.jboss.resteasy.spi.NotFoundException;
 import org.keycloak.ClientConnection;
+import org.keycloak.Config;
 import org.keycloak.authentication.RequiredActionProvider;
 import org.keycloak.email.EmailException;
 import org.keycloak.email.EmailProvider;
@@ -17,6 +18,8 @@ import org.keycloak.models.ClientSessionModel;
 import org.keycloak.models.Constants;
 import org.keycloak.models.FederatedIdentityModel;
 import org.keycloak.models.IdentityProviderModel;
+import org.keycloak.models.KeycloakCAModel;
+import org.keycloak.models.KeycloakCAProvider;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.ModelDuplicateException;
 import org.keycloak.models.ModelReadOnlyException;
@@ -26,8 +29,10 @@ import org.keycloak.models.UserConsentModel;
 import org.keycloak.models.UserCredentialModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.UserSessionModel;
+import org.keycloak.models.utils.KeycloakModelUtils;
 import org.keycloak.models.utils.ModelToRepresentation;
 import org.keycloak.models.utils.RepresentationToModel;
+import org.keycloak.models.PKIProvider;
 import org.keycloak.protocol.oidc.OIDCLoginProtocol;
 import org.keycloak.protocol.oidc.TokenManager;
 import org.keycloak.protocol.oidc.utils.RedirectUtils;
@@ -65,6 +70,10 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.WebApplicationException;
 
 import java.net.URI;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -73,6 +82,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
 import org.keycloak.models.UsernameLoginFailureModel;
 import org.keycloak.services.managers.BruteForceProtector;
 import org.keycloak.services.resources.AccountService;
@@ -164,7 +174,7 @@ public class UsersResource {
     }
 
     /**
-     * Create a new user.  Must be a unique username!
+     * Create a new user. Must be a unique username!
      *
      * @param uriInfo
      * @param rep
@@ -215,6 +225,8 @@ public class UsersResource {
         user.setOtpEnabled(rep.isTotp());
         user.setEmailVerified(rep.isEmailVerified());
 
+        configureUserPKI(session, user, rep);
+
         List<String> reqActions = rep.getRequiredActions();
 
         if (reqActions != null) {
@@ -240,6 +252,47 @@ public class UsersResource {
                 user.removeAttribute(attr);
             }
         }
+    }
+
+    private void configureUserPKI(KeycloakSession session, UserModel user, UserRepresentation rep) {
+        KeycloakCAProvider caProvider = session.getProvider(KeycloakCAProvider.class);
+        if (caProvider.getKecloakDefaultCA() == null) {
+            if (Config.scope("pki").getBoolean("certificate", null) != null &&
+                Config.scope("pki").getBoolean("publicKey", null) != null &&
+                Config.scope("pki").getBoolean("privateKey", null) != null) {
+
+                PublicKey publicKey = KeycloakModelUtils.getPublicKeyFromPem(Config.scope("pki").get("publicKey", null));
+                PrivateKey privateKey = KeycloakModelUtils.getPrivateKeyFromPem(Config.scope("pki").get("privateKey", null));
+                X509Certificate caCertificate = KeycloakModelUtils.getCertificateFromPem(Config.scope("pki").get("certificate", null));
+
+                caProvider.configureKecloakCA(publicKey, privateKey, caCertificate);
+            } else {
+                caProvider.addKeycloakDefaultCA();
+            }
+        }
+
+        PKIProvider pkiProvider = session.getProvider(PKIProvider.class);
+        KeycloakCAModel caModel = caProvider.getKecloakDefaultCA();
+        KeyPair caKeyPair = new KeyPair(caModel.getRootCAPublicKey(), caModel.getRootCAPrivateKey());
+        X509Certificate caCertificate = caModel.getRootCACertificate();
+
+        KeyPair keyPair = pkiProvider.generate();
+        X509Certificate certificate = pkiProvider.issue(caCertificate, caKeyPair, user.getId(), keyPair);
+
+        try {
+            if (rep.getPrivateKey() == null || rep.getPublicKey() == null || rep.getCertificate() == null) {
+                user.setPrivateKey(keyPair.getPrivate());
+                user.setPublicKey(keyPair.getPublic());
+                user.setCertificate(certificate);
+            } else {
+                user.setPrivateKey(KeycloakModelUtils.getPrivateKeyFromPem(rep.getPrivateKey()));
+                user.setPublicKey(KeycloakModelUtils.getPublicKeyFromPem(rep.getPublicKey()));
+                user.setCertificate(KeycloakModelUtils.getCertificateFromPem(rep.getCertificate()));
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid key/certificate");
+        }
+
     }
 
     /**
@@ -304,14 +357,13 @@ public class UsersResource {
         result.put("sameRealm", sameRealm);
         result.put("redirect", redirect.toString());
         event.event(EventType.IMPERSONATE)
-             .session(userSession)
-             .user(user)
-             .detail(Details.IMPERSONATOR_REALM,authenticatedRealm.getName())
-             .detail(Details.IMPERSONATOR, auth.getAuth().getUser().getUsername()).success();
+            .session(userSession)
+            .user(user)
+            .detail(Details.IMPERSONATOR_REALM, authenticatedRealm.getName())
+            .detail(Details.IMPERSONATOR, auth.getAuth().getUser().getUsername()).success();
 
         return result;
     }
-
 
     /**
      * List set of sessions associated with this user.
@@ -462,8 +514,8 @@ public class UsersResource {
     }
 
     /**
-     * Remove all user sessions associated with this user.  And, for all client that have an admin URL, tell
-     * them to invalidate the sessions for this particular user.
+     * Remove all user sessions associated with this user. And, for all client that have an admin URL, tell them to invalidate
+     * the sessions for this particular user.
      *
      * @param id user id
      */
@@ -509,7 +561,7 @@ public class UsersResource {
     }
 
     /**
-     * Query list of users.  May pass in query criteria
+     * Query list of users. May pass in query criteria
      *
      * @param search string contained in username, first or last name, or email
      * @param last
@@ -522,12 +574,12 @@ public class UsersResource {
     @NoCache
     @Produces(MediaType.APPLICATION_JSON)
     public List<UserRepresentation> getUsers(@QueryParam("search") String search,
-                                             @QueryParam("lastName") String last,
-                                             @QueryParam("firstName") String first,
-                                             @QueryParam("email") String email,
-                                             @QueryParam("username") String username,
-                                             @QueryParam("first") Integer firstResult,
-                                             @QueryParam("max") Integer maxResults) {
+        @QueryParam("lastName") String last,
+        @QueryParam("firstName") String first,
+        @QueryParam("email") String email,
+        @QueryParam("username") String username,
+        @QueryParam("first") Integer firstResult,
+        @QueryParam("max") Integer maxResults) {
         auth.requireView();
 
         firstResult = firstResult != null ? firstResult : -1;
@@ -640,7 +692,7 @@ public class UsersResource {
     }
 
     /**
-     * Effective realm-level role mappings for this user.  Will recurse all composite roles to get this list.
+     * Effective realm-level role mappings for this user. Will recurse all composite roles to get this list.
      *
      * @param id user id
      * @return
@@ -661,7 +713,7 @@ public class UsersResource {
         List<RoleRepresentation> realmMappingsRep = new ArrayList<RoleRepresentation>();
         for (RoleModel roleModel : roles) {
             if (user.hasRole(roleModel)) {
-               realmMappingsRep.add(ModelToRepresentation.toRepresentation(roleModel));
+                realmMappingsRep.add(ModelToRepresentation.toRepresentation(roleModel));
             }
         }
         return realmMappingsRep;
@@ -770,9 +822,9 @@ public class UsersResource {
         return new UserClientRoleMappingsResource(uriInfo, realm, auth, user, clientModel, adminEvent);
 
     }
+
     /**
-     *  Set up a temporary password for this user.  User will have to reset this temporary password when they log
-     *  in next.
+     * Set up a temporary password for this user. User will have to reset this temporary password when they log in next.
      *
      * @param id
      * @param pass temporary password
@@ -799,7 +851,8 @@ public class UsersResource {
         } catch (ModelReadOnlyException mre) {
             throw new BadRequestException("Can't reset password as account is read only");
         }
-        if (pass.isTemporary()) user.addRequiredAction(UserModel.RequiredAction.UPDATE_PASSWORD);
+        if (pass.isTemporary())
+            user.addRequiredAction(UserModel.RequiredAction.UPDATE_PASSWORD);
 
         adminEvent.operation(OperationType.ACTION).resourcePath(uriInfo).success();
     }
@@ -825,9 +878,8 @@ public class UsersResource {
     }
 
     /**
-     * Send an email to the user with a link they can click to reset their password.
-     * The redirectUri and clientId parameters are optional. The default for the
-     * redirect is the account client.
+     * Send an email to the user with a link they can click to reset their password. The redirectUri and clientId parameters are
+     * optional. The default for the redirect is the account client.
      *
      * @param id
      * @param redirectUri redirect uri
@@ -837,7 +889,8 @@ public class UsersResource {
     @Path("{id}/reset-password-email")
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response resetPasswordEmail(@PathParam("id") String id, @QueryParam(OIDCLoginProtocol.REDIRECT_URI_PARAM) String redirectUri, @QueryParam(OIDCLoginProtocol.CLIENT_ID_PARAM) String clientId) {
+    public Response resetPasswordEmail(@PathParam("id") String id, @QueryParam(OIDCLoginProtocol.REDIRECT_URI_PARAM) String redirectUri,
+        @QueryParam(OIDCLoginProtocol.CLIENT_ID_PARAM) String clientId) {
         auth.requireManage();
 
         UserModel user = session.users().getUserById(id, realm);
@@ -862,7 +915,8 @@ public class UsersResource {
 
             this.session.getProvider(EmailProvider.class).setRealm(realm).setUser(user).sendChangePassword(link, expiration);
 
-            //audit.user(user).detail(Details.EMAIL, user.getEmail()).detail(Details.CODE_ID, accessCode.getCodeId()).success();
+            // audit.user(user).detail(Details.EMAIL, user.getEmail()).detail(Details.CODE_ID,
+            // accessCode.getCodeId()).success();
 
             adminEvent.operation(OperationType.ACTION).resourcePath(uriInfo).success();
 
@@ -874,9 +928,8 @@ public class UsersResource {
     }
 
     /**
-     * Send an email to the user with a link they can click to verify their email address.
-     * The redirectUri and clientId parameters are optional. The default for the
-     * redirect is the account client.
+     * Send an email to the user with a link they can click to verify their email address. The redirectUri and clientId
+     * parameters are optional. The default for the redirect is the account client.
      *
      * @param id
      * @param redirectUri redirect uri
@@ -886,7 +939,8 @@ public class UsersResource {
     @Path("{id}/send-verify-email")
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response sendVerifyEmail(@PathParam("id") String id, @QueryParam(OIDCLoginProtocol.REDIRECT_URI_PARAM) String redirectUri, @QueryParam(OIDCLoginProtocol.CLIENT_ID_PARAM) String clientId) {
+    public Response sendVerifyEmail(@PathParam("id") String id, @QueryParam(OIDCLoginProtocol.REDIRECT_URI_PARAM) String redirectUri,
+        @QueryParam(OIDCLoginProtocol.CLIENT_ID_PARAM) String clientId) {
         auth.requireManage();
 
         UserModel user = session.users().getUserById(id, realm);
@@ -912,7 +966,8 @@ public class UsersResource {
 
             this.session.getProvider(EmailProvider.class).setRealm(realm).setUser(user).sendVerifyEmail(link, expiration);
 
-            //audit.user(user).detail(Details.EMAIL, user.getEmail()).detail(Details.CODE_ID, accessCode.getCodeId()).success();
+            // audit.user(user).detail(Details.EMAIL, user.getEmail()).detail(Details.CODE_ID,
+            // accessCode.getCodeId()).success();
 
             adminEvent.operation(OperationType.ACTION).resourcePath(uriInfo).success();
 
@@ -956,9 +1011,8 @@ public class UsersResource {
             redirect = Urls.accountBase(uriInfo.getBaseUri()).path("/").build(realm.getName()).toString();
         }
 
-
         UserSessionModel userSession = session.sessions().createUserSession(realm, user, user.getUsername(), clientConnection.getRemoteAddr(), "form", false, null, null);
-        //audit.session(userSession);
+        // audit.session(userSession);
         ClientSessionModel clientSession = session.sessions().createClientSession(realm, client);
         clientSession.setAuthMethod(OIDCLoginProtocol.LOGIN_PROTOCOL);
         clientSession.setRedirectUri(redirect);

@@ -1,8 +1,6 @@
 package org.keycloak.models.utils;
 
 import org.bouncycastle.openssl.PEMWriter;
-import org.keycloak.constants.KerberosConstants;
-import org.keycloak.constants.ServiceAccountConstants;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
@@ -10,7 +8,6 @@ import org.keycloak.models.KeycloakSessionTask;
 import org.keycloak.models.KeycloakTransaction;
 import org.keycloak.models.ModelDuplicateException;
 import org.keycloak.models.RealmModel;
-import org.keycloak.models.RequiredCredentialModel;
 import org.keycloak.models.RoleModel;
 import org.keycloak.models.UserCredentialModel;
 import org.keycloak.models.UserFederationMapperModel;
@@ -20,6 +17,7 @@ import org.keycloak.util.CertificateUtils;
 import org.keycloak.util.PemUtils;
 
 import javax.crypto.spec.SecretKeySpec;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.security.Key;
@@ -49,7 +47,7 @@ public final class KeycloakModelUtils {
         return UUID.randomUUID().toString();
     }
 
-    public static PublicKey getPublicKey(String publicKeyPem) {
+    public static PublicKey getPublicKeyFromPem(String publicKeyPem) {
         if (publicKeyPem != null) {
             try {
                 return PemUtils.decodePublicKey(publicKeyPem);
@@ -61,7 +59,18 @@ public final class KeycloakModelUtils {
         }
     }
 
-    public static X509Certificate getCertificate(String cert) {
+    public static PrivateKey getPrivateKeyFromPem(String privateKeyPem) {
+        if (privateKeyPem != null) {
+            try {
+                return PemUtils.decodePrivateKey(privateKeyPem);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return null;
+    }
+
+    public static X509Certificate getCertificateFromPem(String cert) {
         if (cert != null) {
             try {
                 return PemUtils.decodeCertificate(cert);
@@ -73,48 +82,45 @@ public final class KeycloakModelUtils {
         }
     }
 
-
-    public static PrivateKey getPrivateKey(String privateKeyPem) {
-        if (privateKeyPem != null) {
-            try {
-                return PemUtils.decodePrivateKey(privateKeyPem);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return null;
-    }
-
     public static Key getSecretKey(String secret) {
-        return secret != null ? new SecretKeySpec(secret.getBytes(), "HmacSHA256") : null;
+        return secret != null ? new SecretKeySpec(secret.getBytes(),
+            "HmacSHA256") : null;
     }
 
     public static String getPemFromKey(Key key) {
-        StringWriter writer = new StringWriter();
-        PEMWriter pemWriter = new PEMWriter(writer);
-        try {
-            pemWriter.writeObject(key);
-            pemWriter.flush();
-            pemWriter.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (key != null) {
+            StringWriter writer = new StringWriter();
+            PEMWriter pemWriter = new PEMWriter(writer);
+            try {
+                pemWriter.writeObject(key);
+                pemWriter.flush();
+                pemWriter.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            String s = writer.toString();
+            return PemUtils.removeBeginEnd(s);
+        } else {
+            return null;
         }
-        String s = writer.toString();
-        return PemUtils.removeBeginEnd(s);
     }
 
     public static String getPemFromCertificate(X509Certificate certificate) {
-        StringWriter writer = new StringWriter();
-        PEMWriter pemWriter = new PEMWriter(writer);
-        try {
-            pemWriter.writeObject(certificate);
-            pemWriter.flush();
-            pemWriter.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (certificate != null) {
+            StringWriter writer = new StringWriter();
+            PEMWriter pemWriter = new PEMWriter(writer);
+            try {
+                pemWriter.writeObject(certificate);
+                pemWriter.flush();
+                pemWriter.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            String s = writer.toString();
+            return PemUtils.removeBeginEnd(s);
+        } else {
+            return null;
         }
-        String s = writer.toString();
-        return PemUtils.removeBeginEnd(s);
     }
 
     public static void generateRealmKeys(RealmModel realm) {
@@ -130,7 +136,8 @@ public final class KeycloakModelUtils {
         realm.setPublicKey(keyPair.getPublic());
         X509Certificate certificate = null;
         try {
-            certificate = CertificateUtils.generateV1SelfSignedCertificate(keyPair, realm.getName());
+            certificate = CertificateUtils.generateV1SelfSignedCertificate(
+                keyPair, realm.getName());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -142,7 +149,9 @@ public final class KeycloakModelUtils {
     public static void generateRealmCertificate(RealmModel realm) {
         X509Certificate certificate = null;
         try {
-            certificate = CertificateUtils.generateV1SelfSignedCertificate(new KeyPair(realm.getPublicKey(), realm.getPrivateKey()), realm.getName());
+            certificate = CertificateUtils.generateV1SelfSignedCertificate(
+                new KeyPair(realm.getPublicKey(), realm.getPrivateKey()),
+                realm.getName());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -161,12 +170,15 @@ public final class KeycloakModelUtils {
         }
         X509Certificate certificate = null;
         try {
-            certificate = CertificateUtils.generateV1SelfSignedCertificate(keyPair, subject);
+            certificate = CertificateUtils.generateV1SelfSignedCertificate(
+                keyPair, subject);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        String privateKeyPem = KeycloakModelUtils.getPemFromKey(keyPair.getPrivate());
-        String publicKeyPem = KeycloakModelUtils.getPemFromKey(keyPair.getPublic());
+        String privateKeyPem = KeycloakModelUtils.getPemFromKey(keyPair
+            .getPrivate());
+        String publicKeyPem = KeycloakModelUtils.getPemFromKey(keyPair
+            .getPublic());
         String certPem = KeycloakModelUtils.getPemFromCertificate(certificate);
 
         client.setAttribute(ClientModel.PRIVATE_KEY, privateKeyPem);
@@ -201,14 +213,19 @@ public final class KeycloakModelUtils {
      * @param visited set of already visited roles (used for recursion)
      * @return true if "role" is descendant of "composite"
      */
-    public static boolean searchFor(RoleModel role, RoleModel composite, Set<RoleModel> visited) {
-        if (visited.contains(composite)) return false;
+    public static boolean searchFor(RoleModel role, RoleModel composite,
+        Set<RoleModel> visited) {
+        if (visited.contains(composite))
+            return false;
         visited.add(composite);
         Set<RoleModel> composites = composite.getComposites();
-        if (composites.contains(role)) return true;
+        if (composites.contains(role))
+            return true;
         for (RoleModel contained : composites) {
-            if (!contained.isComposite()) continue;
-            if (searchFor(role, contained, visited)) return true;
+            if (!contained.isComposite())
+                continue;
+            if (searchFor(role, contained, visited))
+                return true;
         }
         return false;
     }
@@ -220,10 +237,11 @@ public final class KeycloakModelUtils {
      * @param username username or email of user
      * @return found user
      */
-    public static UserModel findUserByNameOrEmail(KeycloakSession session, RealmModel realm, String username) {
+    public static UserModel findUserByNameOrEmail(KeycloakSession session,
+        RealmModel realm, String username) {
         UserModel user = session.users().getUserByUsername(username, realm);
         if (user == null && username.contains("@")) {
-            user =  session.users().getUserByEmail(username, realm);
+            user = session.users().getUserByEmail(username, realm);
         }
         return user;
     }
@@ -234,7 +252,8 @@ public final class KeycloakModelUtils {
      * @param factory
      * @param task
      */
-    public static void runJobInTransaction(KeycloakSessionFactory factory, KeycloakSessionTask task) {
+    public static void runJobInTransaction(KeycloakSessionFactory factory,
+        KeycloakSessionTask task) {
         KeycloakSession session = factory.create();
         KeycloakTransaction tx = session.getTransaction();
         try {
@@ -269,10 +288,12 @@ public final class KeycloakModelUtils {
      * @return true if targetRole is in roles (directly or indirectly via composite role)
      */
     public static boolean hasRole(Set<RoleModel> roles, RoleModel targetRole) {
-        if (roles.contains(targetRole)) return true;
+        if (roles.contains(targetRole))
+            return true;
 
         for (RoleModel mapping : roles) {
-            if (mapping.hasRole(targetRole)) return true;
+            if (mapping.hasRole(targetRole))
+                return true;
         }
         return false;
     }
@@ -280,35 +301,45 @@ public final class KeycloakModelUtils {
     // USER FEDERATION RELATED STUFF
 
     /**
-     * Ensure that displayName of myProvider (if not null) is unique and there is no other provider with same displayName in the list.
+     * Ensure that displayName of myProvider (if not null) is unique and there is no other provider with same displayName in the
+     * list.
      *
      * @param displayName to check for duplications
      * @param myProvider provider, which is excluded from the list (if present)
      * @param federationProviders
      * @throws ModelDuplicateException if there is other provider with same displayName
      */
-    public static void ensureUniqueDisplayName(String displayName, UserFederationProviderModel myProvider, List<UserFederationProviderModel> federationProviders) throws ModelDuplicateException {
+    public static void ensureUniqueDisplayName(String displayName,
+        UserFederationProviderModel myProvider,
+        List<UserFederationProviderModel> federationProviders)
+        throws ModelDuplicateException {
         if (displayName != null) {
 
             for (UserFederationProviderModel federationProvider : federationProviders) {
-                if (myProvider != null && (myProvider.equals(federationProvider) || (myProvider.getId() != null && myProvider.getId().equals(federationProvider.getId())))) {
+                if (myProvider != null
+                    && (myProvider.equals(federationProvider) || (myProvider
+                        .getId() != null && myProvider.getId().equals(
+                        federationProvider.getId())))) {
                     continue;
                 }
 
                 if (displayName.equals(federationProvider.getDisplayName())) {
-                    throw new ModelDuplicateException("There is already existing federation provider with display name: " + displayName);
+                    throw new ModelDuplicateException(
+                        "There is already existing federation provider with display name: "
+                            + displayName);
                 }
             }
         }
     }
 
-
-    public static UserFederationProviderModel findUserFederationProviderByDisplayName(String displayName, RealmModel realm) {
+    public static UserFederationProviderModel findUserFederationProviderByDisplayName(
+        String displayName, RealmModel realm) {
         if (displayName == null) {
             return null;
         }
 
-        for (UserFederationProviderModel fedProvider : realm.getUserFederationProviders()) {
+        for (UserFederationProviderModel fedProvider : realm
+            .getUserFederationProviders()) {
             if (displayName.equals(fedProvider.getDisplayName())) {
                 return fedProvider;
             }
@@ -316,9 +347,10 @@ public final class KeycloakModelUtils {
         return null;
     }
 
-
-    public static UserFederationProviderModel findUserFederationProviderById(String fedProviderId, RealmModel realm) {
-        for (UserFederationProviderModel fedProvider : realm.getUserFederationProviders()) {
+    public static UserFederationProviderModel findUserFederationProviderById(
+        String fedProviderId, RealmModel realm) {
+        for (UserFederationProviderModel fedProvider : realm
+            .getUserFederationProviders()) {
             if (fedProviderId.equals(fedProvider.getId())) {
                 return fedProvider;
             }
@@ -326,8 +358,9 @@ public final class KeycloakModelUtils {
         return null;
     }
 
-
-    public static UserFederationMapperModel createUserFederationMapperModel(String name, String federationProviderId, String mapperType, String... config) {
+    public static UserFederationMapperModel createUserFederationMapperModel(
+        String name, String federationProviderId, String mapperType,
+        String... config) {
         UserFederationMapperModel mapperModel = new UserFederationMapperModel();
         mapperModel.setName(name);
         mapperModel.setFederationProviderId(federationProviderId);
@@ -344,7 +377,8 @@ public final class KeycloakModelUtils {
             }
         }
         if (key != null) {
-            throw new IllegalStateException("Invalid count of arguments for config. Maybe mistake?");
+            throw new IllegalStateException(
+                "Invalid count of arguments for config. Maybe mistake?");
         }
         mapperModel.setConfig(configMap);
 
@@ -354,6 +388,6 @@ public final class KeycloakModelUtils {
     // END USER FEDERATION RELATED STUFF
 
     public static String toLowerCaseSafe(String str) {
-        return str==null ? null : str.toLowerCase();
+        return str == null ? null : str.toLowerCase();
     }
 }

@@ -8,6 +8,9 @@ import org.keycloak.models.RoleModel;
 import org.keycloak.models.cache.RealmCache;
 
 import java.io.Serializable;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -51,6 +54,10 @@ public class CachedClient implements Serializable {
     private int nodeReRegistrationTimeout;
     private Map<String, Integer> registeredNodes;
 
+    private PublicKey publicKey;
+    private PrivateKey privateKey;
+    private X509Certificate certificate;
+
     public CachedClient(RealmCache cache, RealmProvider delegate, RealmModel realm, ClientModel model) {
         id = model.getId();
         secret = model.getSecret();
@@ -67,7 +74,7 @@ public class CachedClient implements Serializable {
         fullScopeAllowed = model.isFullScopeAllowed();
         redirectUris.addAll(model.getRedirectUris());
         webOrigins.addAll(model.getWebOrigins());
-        for (RoleModel role : model.getScopeMappings())  {
+        for (RoleModel role : model.getScopeMappings()) {
             scope.add(role.getId());
         }
         for (ProtocolMapperModel mapper : model.getProtocolMappers()) {
@@ -87,7 +94,12 @@ public class CachedClient implements Serializable {
 
         nodeReRegistrationTimeout = model.getNodeReRegistrationTimeout();
         registeredNodes = new TreeMap<String, Integer>(model.getRegisteredNodes());
+
+        this.publicKey = model.getPublicKey();
+        this.privateKey = model.getPrivateKey();
+        this.certificate = model.getCertificate();
     }
+
     public String getId() {
         return id;
     }
@@ -194,5 +206,17 @@ public class CachedClient implements Serializable {
 
     public Map<String, Integer> getRegisteredNodes() {
         return registeredNodes;
+    }
+
+    public PublicKey getPublicKey() {
+        return publicKey;
+    }
+
+    public PrivateKey getPrivateKey() {
+        return privateKey;
+    }
+
+    public X509Certificate getCertificate() {
+        return certificate;
     }
 }

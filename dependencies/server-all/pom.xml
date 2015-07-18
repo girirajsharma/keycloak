@@ -137,7 +137,7 @@
             <artifactId>keycloak-events-mongo</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.mongodb</groupId>
+        <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
         </dependency>
 
